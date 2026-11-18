@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Minha conta - LiloPlay</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/account.css">
+</head>
+<body data-page="conta">
+  <div id="header"></div>
+
+  <main class="container">
+    <div class="breadcrumb"><a href="index.html">Início</a> › Minha Conta</div>
+    <h1 class="page-title" id="title">Minha conta</h1>
+
+    <div class="loading" id="accLoading">Carregando…</div>
+
+    <div class="account" id="account" hidden>
+      <!-- Menu lateral -->
+      <aside class="acc-side">
+        <div class="acc-user">
+          <span class="avatar p-purple" id="avatar">L</span>
+          <div>
+            <strong id="sideName">Olá!</strong>
+            <small class="acc-type" id="sideType">Cliente</small>
+          </div>
+        </div>
+        <nav class="acc-tabs" id="tabs">
+          <button class="acc-tab on" data-tab="dados" type="button"></button>
+          <button class="acc-tab" data-tab="seguranca" type="button"></button>
+          <div id="adminTabs" style="display:none">
+            <div class="sep">Administração</div>
+            <button class="acc-tab" data-tab="produtos" type="button"></button>
+            <button class="acc-tab" data-tab="categorias" type="button"></button>
+            <button class="acc-tab" data-tab="clientes" type="button"></button>
+            <button class="acc-tab" data-tab="loja" type="button"></button>
+          </div>
+          <div class="sep"></div>
+          <button class="acc-tab logout" id="logout" type="button"></button>
+        </nav>
+      </aside>
+
+      <section>
+        <!-- ========== MEUS DADOS ========== -->
+        <div class="panel on" id="panel-dados">
+          <div class="panel-head">
+            <div><h2>Meus dados</h2><p>Mantenha seus dados atualizados para agilizar seus pedidos.</p></div>
+          </div>
+          <form class="card-box" id="profileForm">
+            <div class="form-section">
+              <h3>Dados pessoais</h3>
+              <div class="form-grid">
+                <div class="field full"><label for="pNome">Nome completo</label><input id="pNome" required autocomplete="name"></div>
+                <div class="field"><label for="pEmail">E-mail</label><input id="pEmail" type="email" readonly><small>Para trocar o e-mail, fale com a gente.</small></div>
+                <div class="field"><label for="pTel">Telefone / WhatsApp</label><input id="pTel" type="tel" autocomplete="tel" placeholder="(11) 97192-3030"></div>
+                <div class="field"><label for="pCpf">CPF</label><input id="pCpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00"></div>
+                <div class="field"><label for="pNasc">Data de nascimento</label><input id="pNasc" type="date"></div>
+              </div>
+            </div>
+            <div class="form-section">
+              <h3>Endereço de entrega</h3>
+              <div class="form-grid g3">
+                <div class="field"><label for="pCep">CEP</label><input id="pCep" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code"><small id="cepHint">Preenchemos o endereço automaticamente.</small></div>
+                <div class="field" style="grid-column: span 2"><label for="pRua">Rua / Avenida</label><input id="pRua" autocomplete="address-line1"></div>
+                <div class="field"><label for="pNum">Número</label><input id="pNum"></div>
+                <div class="field" style="grid-column: span 2"><label for="pComp">Complemento</label><input id="pComp" placeholder="Apto, bloco, referência…" autocomplete="address-line2"></div>
+                <div class="field"><label for="pBairro">Bairro</label><input id="pBairro"></div>
+                <div class="field"><label for="pCidade">Cidade</label><input id="pCidade" autocomplete="address-level2"></div>
+                <div class="field"><label for="pUf">Estado (UF)</label><input id="pUf" maxlength="2" style="text-transform:uppercase" autocomplete="address-level1"></div>
+              </div>
+            </div>
+            <div class="form-section" style="margin-bottom:14px">
+              <h3>Preferências</h3>
+              <label class="check"><input type="checkbox" id="pNews"> Quero receber novidades e promoções por e-mail</label>
+              <div class="t-sub" id="memberSince"></div>
+            </div>
+            <div class="form-actions"><button class="btn btn-primary" type="submit">Salvar alterações</button></div>
+            <div class="form-msg" id="profileMsg"></div>
+          </form>
+        </div>
+
+        <!-- ========== SEGURANÇA ========== -->
+        <div class="panel" id="panel-seguranca">
+          <div class="panel-head"><div><h2>Segurança</h2><p>Altere a senha de acesso à sua conta.</p></div></div>
+          <form class="card-box" id="passForm" style="max-width:520px">
+            <div class="field"><label for="newPass">Nova senha</label><input id="newPass" type="password" minlength="6" required autocomplete="new-password" placeholder="mínimo 6 caracteres"></div>
+            <div class="field"><label for="newPass2">Confirmar nova senha</label><input id="newPass2" type="password" minlength="6" required autocomplete="new-password"></div>
+            <button class="btn btn-primary btn-block" type="submit">Alterar senha</button>
+            <div class="form-msg" id="passMsg"></div>
+          </form>
+        </div>
+
+        <!-- ========== ADMIN: PRODUTOS ========== -->
+        <div class="panel" id="panel-produtos">
+          <div class="panel-head">
+            <div><h2>Produtos</h2><p>Adicione, edite, oculte ou remova produtos da loja.</p></div>
+            <button class="btn btn-primary" type="button" id="newProduct">+ Novo produto</button>
+          </div>
+          <div class="stats" id="prodStats"></div>
+          <div class="toolbar">
+            <input class="input" id="prodSearch" placeholder="Buscar produto…">
+            <select id="prodCatFilter"><option value="">Todas as categorias</option></select>
+            <select id="prodStatusFilter"><option value="">Todos</option><option value="on">Visíveis</option><option value="off">Ocultos</option></select>
+          </div>
+          <div class="table-wrap"><table class="table">
+            <thead><tr><th></th><th>Produto</th><th class="hide-m">Categoria</th><th>Preço</th><th class="hide-m">Status</th><th></th></tr></thead>
+            <tbody id="prodRows"><tr><td colspan="6" class="loading">Carregando…</td></tr></tbody>
+          </table></div>
+        </div>
+
+        <!-- ========== ADMIN: CATEGORIAS ========== -->
+        <div class="panel" id="panel-categorias">
+          <div class="panel-head">
+            <div><h2>Categorias</h2><p>As categorias aparecem no menu e nos filtros da loja.</p></div>
+            <button class="btn btn-primary" type="button" id="newCategory">+ Nova categoria</button>
+          </div>
+          <div class="table-wrap"><table class="table">
+            <thead><tr><th></th><th>Categoria</th><th class="hide-m">Endereço (id)</th><th>Produtos</th><th class="hide-m">Status</th><th></th></tr></thead>
+            <tbody id="catRows"><tr><td colspan="6" class="loading">Carregando…</td></tr></tbody>
+          </table></div>
+        </div>
+
+        <!-- ========== ADMIN: CLIENTES ========== -->
+        <div class="panel" id="panel-clientes">
+          <div class="panel-head"><div><h2>Clientes</h2><p>Pessoas cadastradas na loja.</p></div></div>
+          <div class="toolbar"><input class="input" id="cliSearch" placeholder="Buscar por nome, e-mail, cidade…"></div>
+          <div class="table-wrap"><table class="table">
+            <thead><tr><th>Cliente</th><th class="hide-m">Telefone</th><th class="hide-m">Cidade</th><th class="hide-m">Cadastro</th><th></th></tr></thead>
+            <tbody id="cliRows"><tr><td colspan="5" class="loading">Carregando…</td></tr></tbody>
+          </table></div>
+        </div>
+
+        <!-- ========== ADMIN: CONFIGURAÇÕES DA LOJA ========== -->
+        <div class="panel" id="panel-loja">
+          <div class="panel-head"><div><h2>Configurações da loja</h2><p>Contatos, WhatsApp dos pedidos, frete grátis e pagamento.</p></div></div>
+          <form class="card-box" id="storeForm">
+            <div class="form-section">
+              <h3>Identidade</h3>
+              <div class="form-grid">
+                <div class="field"><label for="sName">Nome da loja</label><input id="sName" required></div>
+                <div class="field"><label for="sSlogan">Slogan</label><input id="sSlogan"></div>
+              </div>
+            </div>
+            <div class="form-section">
+              <h3>Contato</h3>
+              <div class="form-grid">
+                <div class="field"><label for="sWa">WhatsApp dos pedidos (só números)</label><input id="sWa" inputmode="numeric" required placeholder="5511999998888"><small>Com 55 + DDD + número. É para onde vão os pedidos.</small></div>
+                <div class="field"><label for="sWaLabel">WhatsApp (como aparece no site)</label><input id="sWaLabel" placeholder="(11) 99999-8888"></div>
+                <div class="field"><label for="sPhone">Telefone</label><input id="sPhone"></div>
+                <div class="field"><label for="sEmail">E-mail de contato</label><input id="sEmail" type="email"></div>
+                <div class="field"><label for="sInsta">Instagram (sem @)</label><input id="sInsta"></div>
+                <div class="field"><label for="sAddr">Endereço</label><input id="sAddr"></div>
+              </div>
+            </div>
+            <div class="form-section">
+              <h3>Vendas</h3>
+              <div class="form-grid">
+                <div class="field"><label for="sFree">Frete grátis acima de (R$)</label><input id="sFree" type="number" step="0.01" min="0"></div>
+                <div class="field"><label for="sCoupon">Cupom de primeira compra</label><input id="sCoupon" style="text-transform:uppercase"></div>
+                <div class="field"><label for="sInst">Parcelas sem juros</label><input id="sInst" type="number" min="1" max="12"></div>
+                <div class="field"><label for="sPix">Desconto no Pix (%)</label><input id="sPix" type="number" step="0.1" min="0" max="100"></div>
+              </div>
+            </div>
+            <div class="form-actions"><button class="btn btn-primary" type="submit">Salvar configurações</button></div>
+            <div class="form-msg" id="storeMsg"></div>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Modal genérico (formulários do admin) -->
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-box">
+      <div class="modal-head"><h3 id="modalTitle"></h3><button type="button" id="modalClose" aria-label="Fechar">&times;</button></div>
+      <form id="modalForm">
+        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-foot" id="modalFoot"></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="footer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/conta.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

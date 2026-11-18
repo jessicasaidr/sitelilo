@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contato - LiloPlay</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="contato">
+  <div id="header"></div>
+
+  <main class="container">
+    <div class="breadcrumb"><a href="index.html">Início</a> › Contato</div>
+    <h1 class="page-title">Contato</h1>
+
+    <div class="contact">
+      <div>
+        <p style="color:var(--ink-soft);margin-top:0">Ficou com alguma dúvida, quer um produto personalizado ou criar um projeto especial? Fale com a gente! ♡</p>
+        <div class="contact-list" id="contactList"></div>
+      </div>
+
+      <form class="card-box" id="contactForm">
+        <div class="field"><label for="cNome">Nome</label><input id="cNome" required placeholder="ex.: Maria Pérez"></div>
+        <div class="field"><label for="cEmail">E-mail</label><input id="cEmail" type="email" required placeholder="ex.: seuemail@email.com.br"></div>
+        <div class="field"><label for="cTel">Telefone</label><input id="cTel" type="tel" placeholder="ex.: (11) 97192-3030"></div>
+        <div class="field"><label for="cMsg">Mensagem</label><textarea id="cMsg" required placeholder="ex.: Sua mensagem"></textarea></div>
+        <button class="btn btn-primary btn-block" type="submit">Enviar</button>
+        <div class="form-msg" id="contactMsg">Mensagem enviada! Responderemos em breve. ♡</div>
+      </form>
+    </div>
+  </main>
+
+  <div id="footer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    Pages.contato = () => {
+      $("#contactList").innerHTML = [
+        ["wa", "green", "WhatsApp", STORE.whatsappLabel, `https://wa.me/${STORE.whatsapp}`],
+        ["tel", "blue", "Telefone", STORE.phone, `tel:${STORE.phone.replace(/\D/g, "")}`],
+        ["mail", "purple", "E-mail", STORE.email, `mailto:${STORE.email}`],
+        ["pin", "orange", "Endereço", STORE.address, null],
+      ].map(([i, c, t, v, href]) => `
+        <${href ? `a href="${href}" target="_blank" rel="noopener"` : "div"} class="contact-item p-${c}">
+          <span class="ic">${icon(i)}</span>
+          <span><strong>${t}</strong><span style="color:var(--ink)">${v}</span></span>
+        </${href ? "a" : "div"}>`).join("");
+
+      $("#contactForm").onsubmit = (e) => {
+        e.preventDefault();
+        e.target.reset();
+        $("#contactMsg").classList.add("show");
+      };
+    };
+  </script>
+</body>
+</html>

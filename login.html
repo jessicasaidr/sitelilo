@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Minha conta - LiloPlay</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/account.css">
+</head>
+<body data-page="login">
+  <div id="header"></div>
+
+  <main class="container auth">
+    <div class="breadcrumb"><a href="index.html">Início</a> › Minha Conta › <span id="crumb">Login</span></div>
+    <h1 class="page-title" id="title">Iniciar sessão</h1>
+
+    <div class="form-msg form-warn" id="notConfigured">
+      O login ainda não está ativo: falta configurar o Supabase em <strong>js/supabase-config.js</strong>.
+    </div>
+
+    <div class="auth-tabs">
+      <button class="pastel p-blue on" type="button" data-tab="login">Entrar</button>
+      <button class="pastel p-green" type="button" data-tab="register">Criar conta</button>
+    </div>
+
+    <form class="card-box" id="loginForm">
+      <div class="field"><label for="lEmail">E-mail</label><input id="lEmail" type="email" required autocomplete="email" placeholder="ex.: seuemail@email.com.br"></div>
+      <div class="field">
+        <label for="lPass">Senha</label>
+        <div class="pass-wrap"><input id="lPass" type="password" required autocomplete="current-password" placeholder="ex.: suasenha"><button type="button" class="js-eye" aria-label="Mostrar senha"></button></div>
+      </div>
+      <div class="links"><a href="#" id="forgot">Esqueceu a senha?</a></div>
+      <button class="btn btn-primary btn-block" type="submit">Iniciar sessão</button>
+      <div class="form-msg" id="loginMsg"></div>
+      <p class="alt">Não possui uma conta ainda? <a href="#" data-go="register">Criar uma conta</a></p>
+    </form>
+
+    <form class="card-box" id="registerForm" hidden>
+      <div class="field"><label for="rNome">Nome completo</label><input id="rNome" required autocomplete="name" placeholder="ex.: Maria Pérez"></div>
+      <div class="field"><label for="rEmail">E-mail</label><input id="rEmail" type="email" required autocomplete="email" placeholder="ex.: seuemail@email.com.br"></div>
+      <div class="field"><label for="rTel">Telefone / WhatsApp</label><input id="rTel" type="tel" autocomplete="tel" placeholder="ex.: (11) 97192-3030"></div>
+      <div class="field">
+        <label for="rPass">Senha</label>
+        <div class="pass-wrap"><input id="rPass" type="password" minlength="6" required autocomplete="new-password" placeholder="mínimo 6 caracteres"><button type="button" class="js-eye" aria-label="Mostrar senha"></button></div>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit" style="background:var(--green-t)">Criar conta</button>
+      <div class="form-msg" id="registerMsg"></div>
+      <p class="alt">Já possui uma conta? <a href="#" data-go="login">Iniciar sessão</a></p>
+    </form>
+  </main>
+
+  <div id="footer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    Pages.login = () => {
+      /* Já logado? vai direto para a conta */
+      if (DB.user) { location.replace("conta.html"); return; }
+      if (!DB.enabled) $("#notConfigured").classList.add("show");
+
+      const msg = (id, text, ok = true) => {
+        const m = $(id); m.innerHTML = text; m.classList.add("show"); m.classList.toggle("form-error", !ok);
+      };
+      const busy = (form, on) => { const b = $("button[type=submit]", form); b.disabled = on; b.style.opacity = on ? .6 : 1; };
+
+      const show = (tab) => {
+        $("#loginForm").hidden = tab !== "login";
+        $("#registerForm").hidden = tab !== "register";
+        $$(".auth-tabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
+        $("#title").textContent = tab === "login" ? "Iniciar sessão" : "Criar conta";
+        $("#crumb").textContent = tab === "login" ? "Login" : "Cadastro";
+      };
+      $$(".auth-tabs button").forEach((b) => b.onclick = () => show(b.dataset.tab));
+      $$("[data-go]").forEach((a) => a.onclick = (e) => { e.preventDefault(); show(a.dataset.go); });
+      if (location.hash === "#cadastro") show("register");
+
+      $$(".js-eye").forEach((b) => {
+        b.innerHTML = icon("eye", 20);
+        b.onclick = () => { const i = b.previousElementSibling; i.type = i.type === "password" ? "text" : "password"; };
+      });
+
+      $("#forgot").onclick = async (e) => {
+        e.preventDefault();
+        const email = $("#lEmail").value.trim();
+        if (!email) return msg("#loginMsg", "Digite seu e-mail acima e clique de novo em <strong>Esqueceu a senha?</strong>", false);
+        if (!DB.enabled) return msg("#loginMsg", "Login ainda não configurado.", false);
+        try { await DB.resetPassword(email); msg("#loginMsg", "Se o e-mail estiver cadastrado, você receberá um link para criar uma nova senha."); }
+        catch (err) { msg("#loginMsg", authErrorPt(err), false); }
+      };
+
+      $("#loginForm").onsubmit = async (e) => {
+        e.preventDefault();
+        if (!DB.enabled) return msg("#loginMsg", "Login ainda não configurado.", false);
+        busy(e.target, true);
+        try {
+          await DB.signIn($("#lEmail").value.trim(), $("#lPass").value);
+          location.href = "conta.html";
+        } catch (err) { msg("#loginMsg", authErrorPt(err), false); }
+        busy(e.target, false);
+      };
+
+      $("#registerForm").onsubmit = async (e) => {
+        e.preventDefault();
+        if (!DB.enabled) return msg("#registerMsg", "Cadastro ainda não configurado.", false);
+        busy(e.target, true);
+        try {
+          const data = await DB.signUp({
+            nome: $("#rNome").value.trim(),
+            email: $("#rEmail").value.trim(),
+            telefone: $("#rTel").value.trim(),
+            password: $("#rPass").value,
+          });
+          if (data.session) { location.href = "conta.html"; return; }
+          e.target.reset();
+          msg("#registerMsg", `Conta criada! 🎉 Enviamos um link de confirmação para o seu e-mail. Depois de confirmar, é só entrar. Use o cupom <strong>${esc(STORE.coupon)}</strong> na primeira compra.`);
+        } catch (err) { msg("#registerMsg", authErrorPt(err), false); }
+        busy(e.target, false);
+      };
+    };
+  </script>
+</body>
+</html>

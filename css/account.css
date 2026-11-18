@@ -1,0 +1,108 @@
+/* =========================================================
+   Minha conta / Painel admin
+   ========================================================= */
+.account { display: grid; grid-template-columns: 250px 1fr; gap: 30px; padding-bottom: 60px; align-items: start; }
+.acc-side { background: #fff; border-radius: var(--radius-lg); padding: 18px; box-shadow: var(--shadow); position: sticky; top: 150px; }
+.acc-user { display: flex; gap: 12px; align-items: center; padding-bottom: 14px; margin-bottom: 10px; border-bottom: 2px dashed var(--indigo-1); min-width: 0; }
+.acc-user > div { min-width: 0; }
+.avatar { width: 48px; height: 48px; border-radius: 16px; display: grid; place-items: center; font-family: var(--font-title); font-size: 1.3rem; font-weight: 600; flex-shrink: 0; }
+.acc-user strong { display: block; color: var(--indigo); font-family: var(--font-title); font-weight: 600; line-height: 1.2; }
+.acc-user small { color: var(--ink-soft); font-size: .78rem; }
+.acc-type { display: block; margin-top: 2px; font-weight: 600; }
+.acc-tabs { display: grid; gap: 6px; }
+.acc-tabs .sep { font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); margin: 12px 4px 2px; }
+.acc-tab { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 12px; border: 0; background: none; cursor: pointer; font-weight: 800; color: var(--ink-soft); text-align: left; width: 100%; }
+.acc-tab:hover { background: var(--bg); color: var(--indigo); }
+.acc-tab.on { color: var(--indigo); background: var(--indigo-1); }
+.acc-tab.logout { color: var(--rose-t); }
+.admin-badge { display: inline-block; background: var(--indigo); color: #fff; font-size: .68rem; font-weight: 800; padding: 2px 8px; border-radius: 999px; margin-top: 4px; letter-spacing: .04em; }
+
+.panel { display: none; }
+.panel.on { display: block; }
+.panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+.panel-head h2 { margin: 0; font-size: 1.6rem; }
+.panel-head p { margin: 4px 0 0; color: var(--ink-soft); font-size: .92rem; }
+.form-section { margin-bottom: 26px; }
+.form-section h3 { font-size: 1.1rem; margin-bottom: 14px; }
+.form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 16px; }
+.form-grid.g3 { grid-template-columns: 2fr 1fr 1fr; }
+.form-grid .full { grid-column: 1 / -1; }
+.field input[readonly] { background: var(--bg); color: var(--ink-soft); }
+.field small { color: var(--ink-soft); font-size: .78rem; }
+.check { display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 700; font-size: .92rem; margin-bottom: 10px; }
+.check input { accent-color: var(--indigo); width: 18px; height: 18px; }
+.form-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+.stat { border-radius: var(--radius); padding: 16px; }
+.stat strong { display: block; font-family: var(--font-title); font-size: 1.8rem; font-weight: 600; line-height: 1.1; }
+.stat span { font-size: .82rem; font-weight: 800; }
+
+.form-msg.form-error { background: var(--rose-1); color: #be123c; }
+.form-msg.form-warn { background: var(--yellow-1); color: #92400e; margin-bottom: 18px; }
+
+/* Tabela */
+.toolbar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.toolbar .input { max-width: 320px; }
+.toolbar select { padding: 10px 14px; border-radius: 12px; border: 2px solid var(--line); background: #fff; }
+.table-wrap { overflow-x: auto; background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow); }
+.table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.table th { text-align: left; font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); padding: 14px; border-bottom: 2px dashed var(--indigo-1); white-space: nowrap; }
+.table td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.table tr:last-child td { border-bottom: 0; }
+.table tbody tr:hover td { background: #fffdf8; }
+.t-thumb { width: 52px; height: 52px; border-radius: 12px; overflow: hidden; }
+.t-thumb .ph svg { width: 50%; height: 50%; }
+.t-name { font-weight: 700; color: var(--ink); }
+.t-sub { font-size: .78rem; color: var(--ink-soft); }
+.pill { display: inline-block; font-size: .72rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; white-space: nowrap; border: 0; cursor: default; }
+.pill.on { background: var(--green-1); color: #047857; }
+.pill.off { background: var(--line); color: var(--ink-soft); }
+button.pill { cursor: pointer; }
+.t-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.icon-btn { width: 36px; height: 36px; border-radius: 10px; border: 0; cursor: pointer; display: grid; place-items: center; background: var(--indigo-1); color: var(--indigo); }
+.icon-btn:hover { filter: brightness(.95); }
+.icon-btn.danger { background: var(--rose-1); color: var(--rose-t); }
+.loading { padding: 40px; text-align: center; color: var(--ink-soft); }
+
+/* Modal */
+.modal { position: fixed; inset: 0; z-index: 110; display: none; align-items: flex-start; justify-content: center; padding: 30px 16px; background: rgba(46, 42, 74, .45); overflow-y: auto; }
+.modal.show { display: flex; }
+.modal-box { background: var(--bg); border-radius: var(--radius-lg); width: min(760px, 100%); box-shadow: var(--shadow-lg); }
+.modal-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 2px dashed var(--indigo-1); }
+.modal-head h3 { margin: 0; }
+.modal-head button { background: none; border: 0; font-size: 1.7rem; cursor: pointer; color: var(--ink-soft); line-height: 1; }
+.modal-body { padding: 22px; }
+.modal-foot { padding: 16px 22px; border-top: 2px dashed var(--indigo-1); display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+
+/* Fotos e seletores no formulário */
+.photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+.photo { position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: var(--shadow); }
+.photo img { width: 100%; height: 100%; object-fit: cover; }
+.photo .cover { position: absolute; left: 6px; top: 6px; background: var(--indigo); color: #fff; font-size: .65rem; font-weight: 800; padding: 2px 7px; border-radius: 999px; }
+.photo .acts { position: absolute; right: 4px; bottom: 4px; display: flex; gap: 4px; }
+.photo .acts button { width: 26px; height: 26px; border-radius: 8px; border: 0; cursor: pointer; background: rgba(255,255,255,.92); font-weight: 800; font-size: .8rem; }
+.photo-add { aspect-ratio: 1; border-radius: 12px; border: 2px dashed var(--indigo-2); background: var(--indigo-1); color: var(--indigo); display: grid; place-items: center; align-content: center; gap: 4px; text-align: center; cursor: pointer; font-size: .75rem; font-weight: 800; padding: 6px; }
+.color-pick, .icon-pick { display: flex; gap: 8px; flex-wrap: wrap; }
+.color-pick label, .icon-pick label { cursor: pointer; position: relative; }
+.color-pick input, .icon-pick input { position: absolute; opacity: 0; pointer-events: none; }
+.color-pick span { display: block; width: 32px; height: 32px; border-radius: 10px; border: 3px solid #fff; box-shadow: 0 0 0 2px var(--line); }
+.color-pick input:checked + span { box-shadow: 0 0 0 3px var(--indigo); }
+.icon-pick span { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: #fff; border: 2px solid var(--line); color: var(--ink-soft); }
+.icon-pick input:checked + span { border-color: var(--indigo); color: var(--indigo); background: var(--indigo-1); }
+.dl { display: grid; grid-template-columns: 160px 1fr; gap: 8px 14px; font-size: .92rem; margin: 0; }
+.dl dt { color: var(--ink-soft); font-weight: 700; }
+.dl dd { margin: 0; word-break: break-word; }
+
+@media (max-width: 860px) {
+  .account { grid-template-columns: 1fr; }
+  .acc-side { position: static; }
+  .acc-tabs { grid-template-columns: 1fr 1fr; }
+  .acc-tabs .sep { grid-column: 1 / -1; }
+  .stats { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 720px) {
+  .form-grid, .form-grid.g3 { grid-template-columns: 1fr; }
+  .dl { grid-template-columns: 1fr; gap: 2px; }
+  .dl dd { margin-bottom: 8px; }
+  .table .hide-m { display: none; }
+}

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Produto - LiloPlay</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="produto">
+  <div id="header"></div>
+
+  <main class="container" style="padding-top:26px">
+    <div class="product" id="product"></div>
+
+    <section class="desc" id="desc"></section>
+
+    <section class="section" style="padding-top:10px">
+      <div class="section-head"><h2>Você pode gostar &lt;3</h2></div>
+      <div class="carousel" id="related"></div>
+    </section>
+  </main>
+
+  <div id="footer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/product-view.js"></script>
+  <script>
+    Pages.produto = () => {
+      const p = productById(qs("id")) || PRODUCTS[0];
+      if (!p) { $("#product").innerHTML = `<div class="empty">Produto não encontrado. <a href="produtos.html" style="color:var(--primary)">Ver produtos</a></div>`; return; }
+      document.title = `${p.name} - ${STORE.name}`;
+      renderProductView($("#product"), p);
+
+      /* Descrição cadastrada no painel admin (cada parágrafo separado por linha em branco) */
+      if (p.description) {
+        $("#desc").innerHTML = `<h3 style="font-size:1.1rem;color:var(--ink)">Descrição</h3>` +
+          p.description.split(/\n\s*\n/).map((par) => `<p>${esc(par).replace(/\n/g, "<br>")}</p>`).join("");
+      } else $("#desc").innerHTML = `
+        <h3 style="font-size:1.1rem;color:var(--ink)">Descrição</h3>
+        <p>${shortDesc(p)}</p>
+        <p>Cada peça é pensada com carinho para tornar o momento de estudo leve e divertido, seja na escola, no homeschooling ou nas atividades em casa.</p>
+        <h2>Por que escolher o LiloPlay?</h2>
+        <ul>
+          <li><strong>Aprender brincando:</strong> materiais manipuláveis lúdicos que prendem a atenção das crianças.</li>
+          <li><strong>Material de qualidade:</strong> ${p.digital ? "arquivos em alta resolução, prontos para imprimir." : "peças resistentes, coloridas e com acabamento seguro."}</li>
+          <li><strong>Feito por educadores:</strong> conteúdo alinhado à BNCC e testado em sala de aula.</li>
+          <li><strong>Prazo:</strong> ${p.digital ? "envio imediato por e-mail após a confirmação do pagamento." : "produção de 7 a 12 dias úteis + prazo de envio."}</li>
+        </ul>
+        <p><strong>Garanta já o seu e transforme o estudo em brincadeira! ♡</strong></p>
+        <div class="socials" style="margin-top:6px">
+          <a href="https://instagram.com/${STORE.instagram}" target="_blank" rel="noopener" aria-label="Instagram" style="color:var(--indigo);background:var(--indigo-1)">${icon("insta", 18)}</a>
+          <a href="https://wa.me/?text=${encodeURIComponent(p.name + " " + location.href)}" target="_blank" rel="noopener" aria-label="Compartilhar no WhatsApp" style="color:var(--indigo);background:var(--indigo-1)">${icon("wa", 18)}</a>
+        </div>`;
+
+      if (p.description) $("#desc").insertAdjacentHTML("beforeend", `
+        <div class="socials" style="margin-top:6px">
+          <a href="https://wa.me/?text=${encodeURIComponent(p.name + " " + location.href)}" target="_blank" rel="noopener" aria-label="Compartilhar no WhatsApp" style="color:var(--indigo);background:var(--indigo-1)">${icon("wa", 18)}</a>
+        </div>`);
+
+      const related = PRODUCTS.filter((x) => x.id !== p.id).sort((a, b) => (b.cat === p.cat) - (a.cat === p.cat) || b.sold - a.sold).slice(0, 8);
+      carousel($("#related"), related);
+    };
+  </script>
+</body>
+</html>

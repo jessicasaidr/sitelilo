@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Produtos - LiloPlay</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="produtos">
+  <div id="header"></div>
+
+  <main class="container">
+    <div class="breadcrumb"><a href="index.html">Início</a> › <span id="crumb">Produtos</span></div>
+    <h1 class="page-title" id="title">Produtos</h1>
+
+    <div class="shop">
+      <aside class="filters" id="filters">
+        <h3>Filtrar por</h3>
+        <div class="filter-group">
+          <h4>Categorias</h4>
+          <div id="fCats"></div>
+        </div>
+        <div class="filter-group">
+          <h4>Tipo</h4>
+          <label><input type="checkbox" id="fPromo"> Em promoção</label>
+          <label><input type="checkbox" id="fNew"> Lançamentos</label>
+        </div>
+      </aside>
+
+      <section>
+        <div class="shop-top">
+          <div style="display:flex;gap:12px;align-items:center">
+            <button class="btn btn-outline filter-toggle" id="filterToggle" type="button" style="padding:9px 16px">Filtrar</button>
+            <span class="count" id="count"></span>
+          </div>
+          <label>
+            <span class="sr-only">Ordenar por</span>
+            <select id="sort">
+              <option value="sold">Mais vendidos</option>
+              <option value="low">Menor preço</option>
+              <option value="high">Maior preço</option>
+              <option value="az">A - Z</option>
+            </select>
+          </label>
+        </div>
+        <div class="grid" id="grid"></div>
+      </section>
+    </div>
+  </main>
+
+  <div id="footer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    Pages.produtos = () => {
+      let cat = qs("cat") || "";
+      const q = (qs("q") || "").toLowerCase().trim();
+      if (qs("promo")) $("#fPromo").checked = true;
+
+      const drawCats = () => {
+        $("#fCats").innerHTML = [{ id: "", name: "Todos os produtos", color: "indigo" }, ...CATEGORIES].map((c) =>
+          `<a href="#" data-cat="${c.id}" class="${c.id === cat ? "on" : ""}"><span class="dot" style="background:var(--${c.color}-t)"></span>${c.name} <small style="color:var(--ink-soft)">(${c.id ? PRODUCTS.filter((p) => p.cat === c.id).length : PRODUCTS.length})</small></a>`).join("");
+        $$("#fCats a").forEach((a) => a.onclick = (e) => {
+          e.preventDefault(); cat = a.dataset.cat;
+          history.replaceState(null, "", cat ? `?cat=${cat}` : location.pathname);
+          drawCats(); draw();
+        });
+      };
+
+      const draw = () => {
+        const c = catById(cat);
+        $("#title").textContent = q ? `Resultados para "${qs("q")}"` : c ? c.name : "Produtos";
+        $("#crumb").textContent = c ? c.name : "Produtos";
+        document.title = `${$("#title").textContent} - LiloPlay`;
+        let list = PRODUCTS.filter((p) =>
+          (!cat || p.cat === cat) &&
+          (!q || p.name.toLowerCase().includes(q)) &&
+          (!$("#fPromo").checked || p.old) &&
+          (!$("#fNew").checked || p.tags.includes("lancamentos")));
+        const s = $("#sort").value;
+        list.sort((a, b) => s === "low" ? a.price - b.price : s === "high" ? b.price - a.price : s === "az" ? a.name.localeCompare(b.name) : b.sold - a.sold);
+        $("#count").textContent = `${list.length} produto${list.length === 1 ? "" : "s"}`;
+        $("#grid").innerHTML = list.length ? list.map(productCard).join("") : `<div class="empty">Nenhum produto encontrado com esses filtros. 🙈</div>`;
+      };
+
+      ["#fPromo", "#fNew", "#sort"].forEach((s) => $(s).onchange = draw);
+      $("#filterToggle").onclick = () => $("#filters").classList.toggle("open");
+      drawCats(); draw();
+    };
+  </script>
+</body>
+</html>

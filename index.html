@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LiloPlay - Brinquedos e Materiais Educativos</title>
+  <meta name="description" content="Brinquedos 3D, kits educativos, jogos 3D e personalizados da Turma da Lilo.">
+  <link rel="icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="home">
+  <div id="header"></div>
+
+  <main>
+    <!-- Banners -->
+    <section class="hero" aria-label="Destaques">
+      <div class="hero-track" id="heroTrack">
+        <div class="hero-slide" style="background:linear-gradient(120deg,#fff7ed 0%,#fae8ff 60%,#e0e7ff 100%)">
+          <div class="container hero-inner">
+            <div>
+              <div class="hero-kicker" style="color:var(--magenta-t)">Brinquedos 3D educativos</div>
+              <h1>Aprender brincando <em>é muito mais divertido.</em></h1>
+              <div class="hero-line" style="color:var(--magenta-t)"></div>
+              <p>Alfabeto, números e quebra-cabeças impressos em 3D, coloridos e seguros para os pequenos explorarem.</p>
+              <div class="hero-feats" id="heroFeats"></div>
+              <a href="produtos.html?cat=brinquedos-3d" class="btn btn-primary">Conhecer brinquedos</a>
+            </div>
+            <div class="hero-art">
+              <div class="blob p-magenta" style="width:46%;height:62%;left:4%;top:4%;transform:rotate(-6deg)" data-ic="puzzle"></div>
+              <div class="blob p-yellow"  style="width:40%;height:50%;right:6%;top:0;transform:rotate(5deg)" data-ic="star"></div>
+              <div class="blob p-cyan"    style="width:44%;height:46%;left:30%;bottom:0;transform:rotate(2deg)" data-ic="cube"></div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-slide" style="background:linear-gradient(120deg,#ffe4e6 0%,#dbeafe 100%)">
+          <div class="container hero-inner">
+            <div>
+              <div class="hero-kicker" style="color:var(--rose-t)">Jogos 3D</div>
+              <h1>Diversão para jogar <em>em família.</em></h1>
+              <div class="hero-line" style="color:var(--rose-t)"></div>
+              <p>Jogos impressos em 3D com a Turma da Lilo para aprender, rir e brincar juntos.</p>
+              <a href="produtos.html?cat=jogos" class="btn btn-primary" style="margin-top:20px">Ver jogos 3D</a>
+            </div>
+            <div class="hero-art">
+              <div class="blob p-rose"   style="width:50%;height:66%;left:6%;top:6%;transform:rotate(-4deg)" data-ic="users"></div>
+              <div class="blob p-blue"   style="width:42%;height:56%;right:4%;top:20%;transform:rotate(6deg)" data-ic="cube"></div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-slide" style="background:linear-gradient(120deg,#fef9c3 0%,#ffedd5 55%,#ffe4e6 100%)">
+          <div class="container hero-inner">
+            <div>
+              <div class="hero-kicker" style="color:var(--orange-t)">Personalizados</div>
+              <h1>Com o nome do seu <em>pequeno campeão.</em></h1>
+              <div class="hero-line" style="color:var(--orange-t)"></div>
+              <p>Chaveiros, cadernos e marcadores da Turma da Lilo personalizados do seu jeito.</p>
+              <a href="produtos.html?cat=personalizados" class="btn btn-primary" style="margin-top:20px">Personalize do seu jeito</a>
+            </div>
+            <div class="hero-art">
+              <div class="blob p-orange" style="width:44%;height:60%;left:8%;top:10%;transform:rotate(-5deg)" data-ic="heart"></div>
+              <div class="blob p-rose"   style="width:40%;height:52%;right:8%;top:0;transform:rotate(4deg)" data-ic="gift"></div>
+              <div class="blob p-purple" style="width:34%;height:40%;right:22%;bottom:0;transform:rotate(-2deg)" data-ic="trophy"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="hero-arrow prev" id="heroPrev" aria-label="Banner anterior" type="button"></button>
+      <button class="hero-arrow next" id="heroNext" aria-label="Próximo banner" type="button"></button>
+    </section>
+    <div class="dots" id="heroDots"></div>
+
+    <!-- Os queridinhos -->
+    <section class="section">
+      <div class="container">
+        <div class="section-head"><h2>Os queridinhos ♡</h2><a href="produtos.html">Ver todos</a></div>
+        <div class="carousel" id="carQueridinhos"></div>
+      </div>
+    </section>
+
+    <!-- Mosaico de categorias -->
+    <section class="section" style="padding-top:0">
+      <div class="container mosaic" id="mosaic"></div>
+    </section>
+
+    <!-- Lançamentos -->
+    <section class="section">
+      <div class="container">
+        <div class="section-head"><h2>Lançamentos</h2><a href="produtos.html">Ver todos</a></div>
+        <div class="carousel" id="carLancamentos"></div>
+      </div>
+    </section>
+
+    <!-- Produto em destaque -->
+    <section class="section">
+      <div class="container">
+        <div class="center-title" style="margin-bottom:34px">
+          <h2>Onde ideias viram brincadeira</h2>
+          <p>produzimos do seu jeito.</p>
+        </div>
+        <div class="product" id="featured"></div>
+      </div>
+    </section>
+
+    <!-- Benefícios -->
+    <section class="benefits" aria-label="Benefícios">
+      <div class="container" id="benefits"></div>
+    </section>
+
+    <!-- Promoções -->
+    <section class="section">
+      <div class="container">
+        <div class="section-head"><h2>Promoções</h2><a href="produtos.html?promo=1">Ver todas</a></div>
+        <div class="carousel" id="carPromo"></div>
+      </div>
+    </section>
+
+    <!-- Instagram -->
+    <section class="section insta" style="padding-top:10px">
+      <div class="container">
+        <a href="#" id="instaLink"></a>
+        <div class="insta-grid" id="instaGrid"></div>
+      </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="section">
+      <div class="container">
+        <div class="newsletter">
+          <h2>Newsletter</h2>
+          <p>Quer receber novidades e atividades grátis em primeira mão? Deixa aqui seu e-mail &lt;3</p>
+          <form class="inline-form js-news">
+            <input type="email" required placeholder="Seu e-mail" aria-label="E-mail">
+            <button class="btn btn-primary" type="submit">Enviar</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="footer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/product-view.js"></script>
+  <script>
+    Pages.home = () => {
+      /* Banners */
+      $$(".blob").forEach((b) => b.innerHTML = icon(b.dataset.ic, 120));
+      $("#heroPrev").innerHTML = icon("left"); $("#heroNext").innerHTML = icon("right");
+      $("#heroFeats").innerHTML = [["cube","Impressão 3D"],["shield","Material seguro"],["gift","Ideal para presentear"],["cap","Feito por educadores"]]
+        .map(([i, t]) => `<div class="hero-feat"><span class="ic" style="color:var(--magenta-t)">${icon(i)}</span>${t}</div>`).join("");
+      const track = $("#heroTrack"), slides = track.children.length, dots = $("#heroDots");
+      let h = 0, timer;
+      dots.innerHTML = [...Array(slides)].map((_, k) => `<button aria-label="Banner ${k + 1}" type="button"></button>`).join("");
+      const go = (n) => {
+        h = (n + slides) % slides;
+        track.style.transform = `translateX(-${h * 100}%)`;
+        $$("button", dots).forEach((d, k) => d.classList.toggle("on", k === h));
+        clearInterval(timer); timer = setInterval(() => go(h + 1), 6000);
+      };
+      $("#heroPrev").onclick = () => go(h - 1);
+      $("#heroNext").onclick = () => go(h + 1);
+      $$("button", dots).forEach((d, k) => d.onclick = () => go(k));
+      go(0);
+
+      /* Carrosséis */
+      carousel($("#carQueridinhos"), PRODUCTS.filter((p) => p.tags.includes("queridinhos")));
+      carousel($("#carLancamentos"), PRODUCTS.filter((p) => p.tags.includes("lancamentos")));
+      carousel($("#carPromo"), PRODUCTS.filter((p) => p.tags.includes("promo")));
+
+      /* Mosaico */
+      $("#mosaic").innerHTML = CATEGORIES.slice(0, 3).map((c) =>
+        `<a href="produtos.html?cat=${c.id}" class="p-${c.color}">${icon(c.icon, 120)}<h3>${c.name}</h3><span>Ver produtos →</span></a>`).join("");
+
+      /* Produto em destaque */
+      if (PRODUCTS[0]) renderProductView($("#featured"), PRODUCTS[0], { compact: true });
+
+      /* Benefícios */
+      $("#benefits").innerHTML = [
+        ["truck", "Frete Grátis", `em pedidos acima de ${brl(STORE.freeShipping)}`],
+        ["card", `Até ${STORE.maxInstallments}x sem juros`, "no cartão de crédito"],
+        ["chat", "Quer criar um projeto?", "estamos aqui para preparar tudo com você"],
+        ["ticket", "Primeira vez?", `use o cupom ${STORE.coupon}`],
+      ].map(([i, t, s]) => `<div class="benefit"><span class="ic">${icon(i)}</span><strong>${t}</strong><small>${s}</small></div>`).join("");
+
+      /* Instagram */
+      $("#instaLink").href = `https://instagram.com/${STORE.instagram}`;
+      $("#instaLink").innerHTML = `${icon("insta", 30)} Siga-nos no @${STORE.instagram}`;
+      $("#instaGrid").innerHTML = ["magenta","yellow","cyan","green","orange","purple"].map((c, k) =>
+        `<div>${placeholder({ color: c, icon: ["puzzle","star","cube","pencil","heart","book"][k] })}</div>`).join("");
+    };
+  </script>
+</body>
+</html>
