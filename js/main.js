@@ -71,9 +71,27 @@ function installments(price) {
   return `${n}x de ${brl(price / n)} sem juros`;
 }
 
+/* ---------- Opções com preço (ex.: 1 unidade / Kit com 3 / Kit com 5) ---------- */
+function productVariants(p) {
+  if (p.variants && p.variants.length) return p.variants;
+  const labels = p.options && p.options.length ? p.options : ["1 unidade"];
+  return labels.map((label) => ({ label, price: p.price, old: p.old || null }));
+}
+function variantFor(p, label) {
+  const vs = productVariants(p);
+  return vs.find((v) => v.label === label) || vs[0];
+}
+/* Menor preço do produto (para os cards) e se as opções têm preços diferentes */
+function priceInfo(p) {
+  const vs = productVariants(p);
+  const cheapest = vs.reduce((a, b) => (b.price < a.price ? b : a), vs[0]);
+  return { v: cheapest, multi: new Set(vs.map((v) => v.price)).size > 1 };
+}
+
 /* ---------- Card de produto ---------- */
 function productCard(p) {
-  const off = p.old ? Math.round((1 - p.price / p.old) * 100) : 0;
+  const { v, multi } = priceInfo(p);
+  const off = v.old && v.old > v.price ? Math.round((1 - v.price / v.old) * 100) : 0;
   const isNew = !off && p.tags.includes("lancamentos");
   return `
   <a class="card" href="produto.html?id=${p.id}">
@@ -82,9 +100,10 @@ function productCard(p) {
       ${placeholder(p)}
     </div>
     <h3>${esc(p.name)}</h3>
-    <div class="price">${brl(p.price)}${p.old ? `<s>${brl(p.old)}</s>` : ""}</div>
-    <div class="installments">${installments(p.price)}</div>
-    <div class="pix">${brl(p.price * (1 - STORE.pixDiscount))} no Pix</div>
+    ${multi ? `<div class="from">a partir de</div>` : ""}
+    <div class="price">${brl(v.price)}${off ? `<s>${brl(v.old)}</s>` : ""}</div>
+    <div class="installments">${installments(v.price)}</div>
+    <div class="pix">${brl(v.price * (1 - STORE.pixDiscount))} no Pix</div>
   </a>`;
 }
 
@@ -95,7 +114,7 @@ function renderHeader() {
   const el = document.getElementById("header");
   if (!el) return;
   el.outerHTML = `
-  <div class="topbar">BRINQUEDOS E MATERIAIS EDUCATIVOS QUE ENCANTAM ✦ FRETE GRÁTIS ACIMA DE ${brl(STORE.freeShipping)}</div>
+  <div class="topbar">MATERIAIS MANIPULÁVEIS E EDUCATIVOS QUE ENCANTAM ✦ FRETE GRÁTIS ACIMA DE ${brl(STORE.freeShipping)}</div>
   <header class="header">
     <div class="container header-main">
       <a href="index.html" class="logo" aria-label="${STORE.name} - início"><img src="assets/logo.png" alt="${STORE.name} - ${STORE.slogan}"></a>
@@ -170,8 +189,8 @@ function renderFooter() {
         </ul>
       </div>
       <div>
-        <h4>Newsletter</h4>
-        <p style="margin-top:0">Novidades e atividades fresquinhas no seu e-mail ♡</p>
+        <h4>Newsletter ♡</h4>
+        <p style="margin-top:0">Novidades fresquinhas no seu e-mail</p>
         <form class="inline-form js-news">
           <input type="email" required placeholder="Seu e-mail" aria-label="E-mail">
           <button class="btn btn-primary" type="submit">Enviar</button>
@@ -207,10 +226,10 @@ function renderFooter() {
 const Cart = {
   items() { return store.get("lilo_cart", []); },
   save(items) { store.set("lilo_cart", items); this.render(); },
-  add(id, qty = 1, opts = "") {
+  add(id, qty = 1, opts = "", variant = "") {
     const items = this.items();
-    const found = items.find((i) => i.id === id && i.opts === opts);
-    if (found) found.qty += qty; else items.push({ id, qty, opts });
+    const found = items.find((i) => i.id === id && i.opts === opts && (i.variant || "") === variant);
+    if (found) found.qty += qty; else items.push({ id, qty, opts, variant });
     this.save(items);
     toast("Adicionado ao carrinho ♡");
     this.open();
@@ -222,7 +241,9 @@ const Cart = {
     items[idx].qty = Math.max(1, Math.min(999, qty || 1));
     this.save(items);
   },
-  total() { return this.items().reduce((s, i) => s + (productById(i.id)?.price || 0) * i.qty, 0); },
+  /* Preço unitário do item, de acordo com a opção (kit) escolhida */
+  unit(i) { const p = productById(i.id); return p ? variantFor(p, i.variant).price : 0; },
+  total() { return this.items().reduce((s, i) => s + this.unit(i) * i.qty, 0); },
   open() { $("#drawer").classList.add("show"); $("#overlay").classList.add("show"); },
   close() { $("#drawer").classList.remove("show"); $("#overlay").classList.remove("show"); },
   cep() { return store.get("lilo_cep", ""); },
@@ -235,7 +256,7 @@ const Cart = {
     const free = total >= STORE.freeShipping;
     const lines = items.map((i, n) => {
       const p = productById(i.id);
-      return `${n + 1}. ${p.name}\n   Qtd: ${i.qty} x ${brl(p.price)} = ${brl(p.price * i.qty)}${i.opts ? `\n   Detalhes: ${i.opts}` : ""}`;
+      return `${n + 1}. ${p.name}\n   Qtd: ${i.qty} x ${brl(this.unit(i))} = ${brl(this.unit(i) * i.qty)}${i.opts ? `\n   Detalhes: ${i.opts}` : ""}`;
     });
     const cep = this.cep();
     /* Se o cliente estiver logado, já envia os dados dele */
@@ -301,7 +322,7 @@ const Cart = {
               <input type="text" inputmode="numeric" value="${i.qty}" data-qty="${idx}" aria-label="Quantidade">
               <button type="button" data-inc="${idx}" aria-label="Aumentar">+</button>
             </div>
-            <strong>${brl(p.price * i.qty)}</strong>
+            <strong>${brl(this.unit(i) * i.qty)}</strong>
           </div>
         </div>
       </div>`;
@@ -384,8 +405,24 @@ function carousel(el, products) {
 
 /* ---------- Formulários "fake" (sem back-end) ---------- */
 function bindForms() {
-  $$(".js-news").forEach((f) => f.addEventListener("submit", (e) => {
-    e.preventDefault(); f.reset(); toast("E-mail cadastrado! Obrigado ♡");
+  $$(".js-news").forEach((f) => f.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const input = $("input[type=email]", f);
+    const btn = $("button[type=submit]", f);
+    const email = input.value.trim().toLowerCase();
+    if (!email) return;
+    if (!window.DB || !DB.enabled) { toast("Newsletter indisponível no momento."); return; }
+    btn.disabled = true;
+    const { error } = await DB.client.from("newsletter").insert({ email });
+    btn.disabled = false;
+    // 23505 = e-mail já cadastrado → para a pessoa, está tudo certo
+    if (error && error.code !== "23505") {
+      console.warn("Newsletter:", error);
+      toast(error.code === "23514" ? "Confira o e-mail digitado." : "Não foi possível cadastrar. Tente de novo.");
+      return;
+    }
+    f.reset();
+    toast(error ? "Este e-mail já está na nossa lista ♡" : "E-mail cadastrado! Obrigado ♡");
   }));
 }
 

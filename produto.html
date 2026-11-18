@@ -4,7 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Produto - LiloPlay</title>
-  <link rel="icon" href="assets/logo.png">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#fffbf3">
+  <meta name="apple-mobile-web-app-title" content="LiloPlay">
+  <meta name="mobile-web-app-capable" content="yes">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -54,7 +61,6 @@
           <li><strong>Feito por educadores:</strong> conteúdo alinhado à BNCC e testado em sala de aula.</li>
           <li><strong>Prazo:</strong> ${p.digital ? "envio imediato por e-mail após a confirmação do pagamento." : "produção de 7 a 12 dias úteis + prazo de envio."}</li>
         </ul>
-        <p><strong>Garanta já o seu e transforme o estudo em brincadeira! ♡</strong></p>
         <div class="socials" style="margin-top:6px">
           <a href="https://instagram.com/${STORE.instagram}" target="_blank" rel="noopener" aria-label="Instagram" style="color:var(--indigo);background:var(--indigo-1)">${icon("insta", 18)}</a>
           <a href="https://wa.me/?text=${encodeURIComponent(p.name + " " + location.href)}" target="_blank" rel="noopener" aria-label="Compartilhar no WhatsApp" style="color:var(--indigo);background:var(--indigo-1)">${icon("wa", 18)}</a>

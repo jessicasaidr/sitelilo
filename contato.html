@@ -4,7 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Contato - LiloPlay</title>
-  <link rel="icon" href="assets/logo.png">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#fffbf3">
+  <meta name="apple-mobile-web-app-title" content="LiloPlay">
+  <meta name="mobile-web-app-capable" content="yes">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -54,10 +61,41 @@
           <span><strong>${t}</strong><span style="color:var(--ink)">${v}</span></span>
         </${href ? "a" : "div"}>`).join("");
 
-      $("#contactForm").onsubmit = (e) => {
+      /* Preenche nome/e-mail/telefone se o cliente estiver logado */
+      if (DB.user) {
+        const pr = DB.profile || {};
+        $("#cNome").value = pr.nome || "";
+        $("#cEmail").value = pr.email || DB.user.email || "";
+        $("#cTel").value = pr.telefone || "";
+      }
+
+      const out = $("#contactMsg");
+      const show = (html, ok) => {
+        out.innerHTML = html;
+        out.classList.add("show");
+        out.style.background = ok ? "" : "var(--rose-1)";
+        out.style.color = ok ? "" : "#be123c";
+      };
+
+      $("#contactForm").onsubmit = async (e) => {
         e.preventDefault();
-        e.target.reset();
-        $("#contactMsg").classList.add("show");
+        if (!DB.enabled) return show("O envio está indisponível no momento. Fale com a gente pelo WhatsApp.", false);
+        const btn = $("button[type=submit]", e.target);
+        btn.disabled = true; btn.style.opacity = .6;
+        const { error } = await DB.client.from("contact_messages").insert({
+          nome: $("#cNome").value.trim(),
+          email: $("#cEmail").value.trim().toLowerCase(),
+          telefone: $("#cTel").value.trim() || null,
+          mensagem: $("#cMsg").value.trim(),
+        });
+        btn.disabled = false; btn.style.opacity = 1;
+        if (error) {
+          console.warn("Contato:", error);
+          return show(error.code === "23514" ? "Confira os dados digitados (e-mail válido e mensagem de até 5000 caracteres)." : "Não foi possível enviar. Tente novamente.", false);
+        }
+        $("#cMsg").value = "";
+        if (!DB.user) e.target.reset();
+        show("Mensagem enviada! Responderemos em breve. ♡", true);
       };
     };
   </script>

@@ -78,6 +78,9 @@ const DB = {
       icon: r.icon,
       images: r.images || [],
       options: r.options || [],
+      variants: (Array.isArray(r.variants) ? r.variants : [])
+        .filter((v) => v && v.label && v.price != null && v.price !== "")
+        .map((v) => ({ label: String(v.label), price: Number(v.price), old: v.old_price != null && v.old_price !== "" ? Number(v.old_price) : null })),
       tags: r.tags || [],
       ages: r.ages || "Todas",
       sold: r.sold || 0,

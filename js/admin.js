@@ -59,12 +59,26 @@ const Admin = {
   cats: [],
   prods: [],
   clients: [],
+  messages: [],
+  subscribers: [],
 
   open(tab) {
     if (tab === "produtos") this.initProducts();
     if (tab === "categorias") this.initCategories();
     if (tab === "clientes") this.initClients();
+    if (tab === "mensagens") this.initMessages();
+    if (tab === "newsletter") this.initNewsletter();
     if (tab === "loja") this.initStore();
+    if (!this._unreadChecked) { this._unreadChecked = true; this.refreshUnread(); }
+  },
+
+  /* Mostra "Mensagens (3)" no menu quando há mensagens não lidas */
+  async refreshUnread() {
+    const { count, error } = await DB.client.from("contact_messages").select("id", { count: "exact", head: true }).eq("lida", false);
+    const tab = $('.acc-tab[data-tab="mensagens"]');
+    if (!tab) return;
+    tab.querySelector(".count")?.remove();
+    if (!error && count) tab.insertAdjacentHTML("beforeend", ` <span class="count">${count}</span>`);
   },
 
   async fetchCats() {
@@ -125,7 +139,12 @@ const Admin = {
         <td><div class="t-thumb">${placeholder(p)}</div></td>
         <td><div class="t-name">${esc(p.name)}</div><div class="t-sub">#${p.id} · ${p.sold} vendidos${p.tags.length ? " · " + p.tags.map(esc).join(", ") : ""}</div></td>
         <td class="hide-m">${esc(this.catName(p.cat))}</td>
-        <td style="white-space:nowrap"><strong>${brl(p.price)}</strong>${p.old ? `<div class="t-sub"><s>${brl(p.old)}</s></div>` : ""}</td>
+        <td style="white-space:nowrap">${(() => {
+          const { v, multi } = priceInfo(p);
+          const vs = productVariants(p);
+          return `${multi ? `<div class="t-sub">a partir de</div>` : ""}<strong>${brl(v.price)}</strong>${v.old && v.old > v.price ? ` <s class="t-sub">${brl(v.old)}</s>` : ""}
+            ${vs.length > 1 ? `<div class="t-sub">${vs.length} opções</div>` : ""}`;
+        })()}</td>
         <td class="hide-m"><button type="button" class="pill ${p.active ? "on" : "off"}" data-toggle="${p.id}" title="Clique para ${p.active ? "ocultar" : "mostrar"}">${p.active ? "Visível" : "Oculto"}</button></td>
         <td><div class="t-actions">
           <a class="icon-btn" href="produto.html?id=${p.id}" target="_blank" title="Ver na loja">${icon("eye", 18)}</a>
@@ -167,16 +186,29 @@ const Admin = {
     const uploadedNow = [];  // fotos enviadas agora (apagadas se cancelar)
     const removed = [];      // fotos antigas removidas (apagadas ao salvar)
 
+    /* Opções com preço. Produtos antigos (sem "variants") começam com as opções
+       antigas usando o preço do produto — é só ajustar o valor de cada uma. */
+    const fmt = (v) => (v === "" || v == null ? "" : Number(v).toFixed(2));
+    let variants = Array.isArray(r.variants) && r.variants.length
+      ? r.variants.map((v) => ({ label: v.label, price: fmt(v.price), old: fmt(v.old_price) }))
+      : (r.options && r.options.length ? r.options : ["1 unidade"]).map((label) => ({ label, price: fmt(r.price), old: fmt(r.old_price) }));
+
     const body = `
       <div class="form-grid">
         <div class="field full"><label for="mName">Nome do produto *</label><input id="mName" required maxlength="140" value="${esc(r.name)}"></div>
         <div class="field"><label for="mCat">Categoria</label>
           <select id="mCat"><option value="">Sem categoria</option>${this.cats.map((c) => `<option value="${esc(c.id)}" ${c.id === r.category_id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></div>
         <div class="field"><label for="mAges">Idade indicada</label><input id="mAges" placeholder="ex.: 3+ ou Todas" value="${esc(r.ages || "")}"></div>
-        <div class="field"><label for="mPrice">Preço (R$) *</label><input id="mPrice" required type="number" step="0.01" min="0" value="${r.price !== "" && r.price != null ? Number(r.price).toFixed(2) : ""}"></div>
-        <div class="field"><label for="mOld">Preço antigo (R$)</label><input id="mOld" type="number" step="0.01" min="0" value="${r.old_price != null && r.old_price !== "" ? Number(r.old_price).toFixed(2) : ""}"><small>Preencha para mostrar "de/por" e o selo de desconto.</small></div>
         <div class="field full"><label for="mDesc">Descrição</label><textarea id="mDesc" placeholder="Deixe uma linha em branco para separar parágrafos.">${esc(r.description || "")}</textarea></div>
-        <div class="field full"><label for="mOpts">Opções de compra (uma por linha)</label><textarea id="mOpts" style="min-height:90px" placeholder="1 unidade&#10;Kit com 3&#10;Kit com 5">${esc((r.options || []).join("\n"))}</textarea></div>
+      </div>
+
+      <div class="field"><label>Opções e preços *</label>
+        <div class="variants">
+          <div class="v-head"><span>Opção</span><span>Preço (R$)</span><span>Preço antigo (R$)</span><span></span></div>
+          <div id="mVariants"></div>
+        </div>
+        <button type="button" class="btn btn-outline" id="mAddVariant" style="padding:8px 14px;margin-top:8px">+ Adicionar opção</button>
+        <small style="display:block;margin-top:6px">Ex.: "1 unidade", "Kit com 3", "Kit com 5", cada uma com o seu preço. O "preço antigo" é opcional e mostra o "de/por" com selo de desconto. A primeira opção já vem selecionada na loja.</small>
       </div>
 
       <div class="field"><label>Fotos</label>
@@ -200,6 +232,33 @@ const Admin = {
         <div class="field"><label for="mSold">Quantidade vendida (exibida)</label><input id="mSold" type="number" min="0" value="${r.sold ?? 0}"></div>
         <div class="field"><label for="mSort">Ordem de exibição</label><input id="mSort" type="number" value="${r.sort_order ?? 0}"><small>Menor número aparece primeiro.</small></div>
       </div>`;
+
+    /* Guarda o que já foi digitado antes de redesenhar as linhas */
+    const readVariants = () => {
+      $$("#mVariants .v-row").forEach((row, k) => {
+        variants[k] = {
+          label: $(".v-label", row).value,
+          price: $(".v-price", row).value,
+          old: $(".v-old", row).value,
+        };
+      });
+    };
+    const drawVariants = () => {
+      $("#mVariants").innerHTML = variants.map((v, k) => `
+        <div class="v-row">
+          <input class="input v-label" placeholder="ex.: Kit com 3" maxlength="60" value="${esc(v.label)}" aria-label="Nome da opção ${k + 1}">
+          <input class="input v-price" type="number" step="0.01" min="0" placeholder="0,00" value="${esc(v.price)}" aria-label="Preço da opção ${k + 1}">
+          <input class="input v-old" type="number" step="0.01" min="0" placeholder="opcional" value="${esc(v.old)}" aria-label="Preço antigo da opção ${k + 1}">
+          <div class="v-acts">
+            ${k > 0 ? `<button type="button" class="icon-btn" data-vup="${k}" title="Subir">↑</button>` : `<span class="v-first" title="Já vem selecionada na loja">★</span>`}
+            <button type="button" class="icon-btn danger" data-vdel="${k}" title="Remover opção" ${variants.length === 1 ? "disabled" : ""}>${icon("trash", 16)}</button>
+          </div>
+        </div>`).join("");
+      $$("[data-vdel]").forEach((b) => b.onclick = () => { readVariants(); variants.splice(+b.dataset.vdel, 1); drawVariants(); });
+      $$("[data-vup]").forEach((b) => b.onclick = () => {
+        readVariants(); const k = +b.dataset.vup; [variants[k - 1], variants[k]] = [variants[k], variants[k - 1]]; drawVariants();
+      });
+    };
 
     const drawPhotos = () => {
       $("#mPhotos").innerHTML = images.map((url, k) => `
@@ -241,14 +300,32 @@ const Admin = {
       body,
       submitLabel: isNew ? "Adicionar produto" : "Salvar alterações",
       onSubmit: async () => {
+        /* Valida as opções */
+        readVariants();
+        const clean = [];
+        for (const [k, v] of variants.entries()) {
+          const label = String(v.label || "").trim();
+          const price = toNum(v.price), old = toNum(v.old);
+          if (!label && price == null && old == null) continue; // linha vazia: ignora
+          if (!label) { alert(`Dê um nome para a opção ${k + 1}.`); return false; }
+          if (price == null || isNaN(price) || price < 0) { alert(`Informe o preço da opção "${label}".`); return false; }
+          if (clean.some((c) => c.label.toLowerCase() === label.toLowerCase())) { alert(`A opção "${label}" está repetida.`); return false; }
+          clean.push({ label, price, old_price: old != null && !isNaN(old) ? old : null });
+        }
+        if (!clean.length) { alert("Cadastre pelo menos uma opção com preço."); return false; }
+        const noDiscount = clean.filter((v) => v.old_price != null && v.old_price <= v.price).map((v) => v.label);
+        if (noDiscount.length && !confirm(`Em "${noDiscount.join('", "')}" o preço antigo é menor ou igual ao preço, então não vai aparecer desconto. Salvar mesmo assim?`)) return false;
+        const cheapest = clean.reduce((a, b) => (b.price < a.price ? b : a), clean[0]);
+
         const row = {
           name: $("#mName").value.trim(),
           category_id: $("#mCat").value || null,
           ages: $("#mAges").value.trim() || null,
-          price: toNum($("#mPrice").value),
-          old_price: toNum($("#mOld").value),
+          variants: clean,
+          options: clean.map((v) => v.label),
+          price: cheapest.price,             // menor preço (usado em listagens e filtros)
+          old_price: cheapest.old_price,
           description: $("#mDesc").value.trim() || null,
-          options: $("#mOpts").value.split("\n").map((s) => s.trim()).filter(Boolean),
           images,
           color: $("input[name=mColor]:checked")?.value || "blue",
           icon: $("input[name=mIcon]:checked")?.value || "star",
@@ -258,9 +335,6 @@ const Admin = {
           sold: parseInt($("#mSold").value) || 0,
           sort_order: parseInt($("#mSort").value) || 0,
         };
-        if (row.old_price !== null && row.old_price <= row.price) {
-          if (!confirm("O preço antigo é menor ou igual ao preço atual, então não vai aparecer desconto. Salvar mesmo assim?")) return false;
-        }
         const q = isNew ? DB.client.from("products").insert(row) : DB.client.from("products").update(row).eq("id", r.id);
         const { error } = await q;
         if (error) throw error;
@@ -278,6 +352,13 @@ const Admin = {
       },
     });
     drawPhotos();
+    drawVariants();
+    $("#mAddVariant").onclick = () => {
+      readVariants();
+      variants.push({ label: "", price: "", old: "" });
+      drawVariants();
+      $$("#mVariants .v-label").pop()?.focus();
+    };
   },
 
   /* =====================================================
@@ -415,6 +496,140 @@ const Admin = {
       onSubmit: () => true,
     });
     $("#modalCancel").hidden = true;
+  },
+
+  /* =====================================================
+     MENSAGENS DO CONTATO
+     ===================================================== */
+  async initMessages(force = false) {
+    if (this.loaded.mensagens && !force) return;
+    this.loaded.mensagens = true;
+    const { data, error } = await DB.client.from("contact_messages").select("*").order("created_at", { ascending: false });
+    if (error) {
+      $("#msgRows").innerHTML = `<tr><td colspan="4" class="loading">${error.code === "42P01" || /does not exist|schema cache/i.test(error.message)
+        ? "A tabela de mensagens ainda não existe. Rode o arquivo <strong>supabase/002_newsletter_contato.sql</strong> no SQL Editor do Supabase."
+        : "Erro ao carregar: " + esc(error.message)}</td></tr>`;
+      return;
+    }
+    this.messages = data;
+    $("#msgSearch").oninput = () => this.renderMessages();
+    $("#msgFilter").onchange = () => this.renderMessages();
+    this.renderMessages();
+  },
+
+  renderMessages() {
+    const q = $("#msgSearch").value.toLowerCase().trim();
+    const f = $("#msgFilter").value;
+    const list = this.messages.filter((m) =>
+      (!q || [m.nome, m.email, m.telefone, m.mensagem].some((v) => (v || "").toLowerCase().includes(q))) &&
+      (!f || (f === "new" ? !m.lida : m.lida)));
+    $("#msgRows").innerHTML = list.length ? list.map((m) => `
+      <tr style="${m.lida ? "" : "font-weight:700"}">
+        <td>
+          <div class="t-name">${m.lida ? "" : `<span class="dot" style="background:var(--rose-t);display:inline-block;margin-right:6px"></span>`}${esc(m.nome)}</div>
+          <div class="t-sub">${esc(m.email)}${m.telefone ? " · " + esc(m.telefone) : ""}</div>
+        </td>
+        <td class="hide-m" style="max-width:340px"><div class="t-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)">${esc(m.mensagem)}</div></td>
+        <td class="hide-m" style="white-space:nowrap">${new Date(m.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</td>
+        <td><div class="t-actions">
+          <button type="button" class="icon-btn" data-msg="${m.id}" title="Ler">${icon("eye", 18)}</button>
+          <button type="button" class="icon-btn danger" data-msgdel="${m.id}" title="Apagar">${icon("trash", 18)}</button>
+        </div></td>
+      </tr>`).join("") : `<tr><td colspan="4" class="loading">${this.messages.length ? "Nenhuma mensagem encontrada." : "Nenhuma mensagem recebida ainda."}</td></tr>`;
+    $$("[data-msg]").forEach((b) => b.onclick = () => this.viewMessage(this.messages.find((m) => String(m.id) === b.dataset.msg)));
+    $$("[data-msgdel]").forEach((b) => b.onclick = () => this.deleteMessage(this.messages.find((m) => String(m.id) === b.dataset.msgdel)));
+  },
+
+  async viewMessage(m) {
+    const subject = encodeURIComponent(`Re: sua mensagem para a ${STORE.name}`);
+    Modal.open({
+      title: `Mensagem de ${m.nome}`,
+      submitLabel: "Fechar",
+      body: `<dl class="dl">
+          <dt>Nome</dt><dd>${esc(m.nome)}</dd>
+          <dt>E-mail</dt><dd><a href="mailto:${esc(m.email)}?subject=${subject}" style="color:var(--primary);font-weight:700">${esc(m.email)}</a></dd>
+          <dt>Telefone</dt><dd>${esc(m.telefone || "-")}</dd>
+          <dt>Recebida em</dt><dd>${new Date(m.created_at).toLocaleString("pt-BR")}</dd>
+        </dl>
+        <div class="card-box" style="margin-top:18px;white-space:pre-wrap;padding:18px">${esc(m.mensagem)}</div>`,
+      extraFoot: `<button type="button" class="btn btn-outline" id="msgToggle" style="margin-right:auto">Marcar como não lida</button>
+        <a class="btn btn-outline" href="mailto:${esc(m.email)}?subject=${subject}">Responder por e-mail</a>`,
+      onSubmit: () => true,
+    });
+    $("#modalCancel").hidden = true;
+    const setRead = async (lida) => {
+      const { error } = await DB.client.from("contact_messages").update({ lida }).eq("id", m.id);
+      if (error) return alert("Erro: " + error.message);
+      m.lida = lida;
+      this.renderMessages();
+      this.refreshUnread();
+    };
+    $("#msgToggle").onclick = async () => { await setRead(false); Modal.close(); };
+    if (!m.lida) await setRead(true);
+  },
+
+  async deleteMessage(m) {
+    if (!confirm(`Apagar a mensagem de "${m.nome}"? Essa ação não pode ser desfeita.`)) return;
+    const { error } = await DB.client.from("contact_messages").delete().eq("id", m.id);
+    if (error) return alert("Erro: " + error.message);
+    this.messages = this.messages.filter((x) => x.id !== m.id);
+    this.renderMessages();
+    this.refreshUnread();
+    toast("Mensagem apagada");
+  },
+
+  /* =====================================================
+     NEWSLETTER
+     ===================================================== */
+  async initNewsletter(force = false) {
+    if (this.loaded.newsletter && !force) return;
+    this.loaded.newsletter = true;
+    const { data, error } = await DB.client.from("newsletter").select("*").order("created_at", { ascending: false });
+    if (error) {
+      $("#newsRows").innerHTML = `<tr><td colspan="3" class="loading">${error.code === "42P01" || /does not exist|schema cache/i.test(error.message)
+        ? "A tabela da newsletter ainda não existe. Rode o arquivo <strong>supabase/002_newsletter_contato.sql</strong> no SQL Editor do Supabase."
+        : "Erro ao carregar: " + esc(error.message)}</td></tr>`;
+      return;
+    }
+    this.subscribers = data;
+    $("#newsSearch").oninput = () => this.renderNewsletter();
+    $("#newsCsv").onclick = () => this.exportNewsletter();
+    this.renderNewsletter();
+  },
+
+  renderNewsletter() {
+    const q = $("#newsSearch").value.toLowerCase().trim();
+    const list = this.subscribers.filter((s) => !q || s.email.toLowerCase().includes(q));
+    $("#newsCsv").textContent = `Baixar planilha (${this.subscribers.length})`;
+    $("#newsRows").innerHTML = list.length ? list.map((s) => `
+      <tr>
+        <td class="t-name" style="word-break:break-all">${esc(s.email)}</td>
+        <td style="white-space:nowrap">${new Date(s.created_at).toLocaleDateString("pt-BR")}</td>
+        <td><div class="t-actions">
+          <button type="button" class="icon-btn danger" data-newsdel="${s.id}" title="Remover da lista">${icon("trash", 18)}</button>
+        </div></td>
+      </tr>`).join("") : `<tr><td colspan="3" class="loading">${this.subscribers.length ? "Nenhum e-mail encontrado." : "Nenhum e-mail cadastrado ainda."}</td></tr>`;
+    $$("[data-newsdel]").forEach((b) => b.onclick = async () => {
+      const s = this.subscribers.find((x) => String(x.id) === b.dataset.newsdel);
+      if (!confirm(`Remover ${s.email} da newsletter?`)) return;
+      const { error } = await DB.client.from("newsletter").delete().eq("id", s.id);
+      if (error) return alert("Erro: " + error.message);
+      this.subscribers = this.subscribers.filter((x) => x.id !== s.id);
+      this.renderNewsletter();
+      toast("E-mail removido da lista");
+    });
+  },
+
+  exportNewsletter() {
+    if (!this.subscribers.length) return toast("A lista ainda está vazia.");
+    // CSV com ";" e BOM para abrir certinho no Excel em português
+    const rows = [["email", "data_cadastro"], ...this.subscribers.map((s) => [s.email, new Date(s.created_at).toLocaleString("pt-BR")])];
+    const csv = "﻿" + rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    a.download = `newsletter-liloplay-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   },
 
   /* =====================================================

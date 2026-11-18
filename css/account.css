@@ -15,6 +15,7 @@
 .acc-tab:hover { background: var(--bg); color: var(--indigo); }
 .acc-tab.on { color: var(--indigo); background: var(--indigo-1); }
 .acc-tab.logout { color: var(--rose-t); }
+.acc-tab .count { margin-left: auto; background: var(--rose-t); color: #fff; font-size: .7rem; font-weight: 800; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; display: inline-grid; place-items: center; }
 .admin-badge { display: inline-block; background: var(--indigo); color: #fff; font-size: .68rem; font-weight: 800; padding: 2px 8px; border-radius: 999px; margin-top: 4px; letter-spacing: .04em; }
 
 .panel { display: none; }
@@ -73,6 +74,23 @@ button.pill { cursor: pointer; }
 .modal-head button { background: none; border: 0; font-size: 1.7rem; cursor: pointer; color: var(--ink-soft); line-height: 1; }
 .modal-body { padding: 22px; }
 .modal-foot { padding: 16px 22px; border-top: 2px dashed var(--indigo-1); display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+
+/* Opções e preços do produto */
+.variants { background: #fff; border-radius: var(--radius); padding: 12px; box-shadow: var(--shadow); }
+.v-head, .v-row { display: grid; grid-template-columns: 1.6fr 1fr 1fr 84px; gap: 8px; align-items: center; }
+.v-head { font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); padding: 0 2px 8px; }
+.v-row + .v-row { margin-top: 8px; }
+.v-row .input { padding: 9px 11px; }
+.v-acts { display: flex; gap: 6px; justify-content: flex-end; }
+.v-acts .icon-btn { width: 34px; height: 34px; font-weight: 800; }
+.v-acts .icon-btn[disabled] { opacity: .35; cursor: not-allowed; }
+.v-first { width: 34px; height: 34px; display: grid; place-items: center; color: var(--yellow-t); }
+@media (max-width: 720px) {
+  .v-head { display: none; }
+  .v-row { grid-template-columns: 1fr 1fr; padding-bottom: 10px; border-bottom: 1px dashed var(--line); }
+  .v-row .v-label { grid-column: 1 / -1; }
+  .v-acts { grid-column: 1 / -1; }
+}
 
 /* Fotos e seletores no formulário */
 .photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }

@@ -5,7 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Minha conta - LiloPlay</title>
   <meta name="robots" content="noindex">
-  <link rel="icon" href="assets/logo.png">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#fffbf3">
+  <meta name="apple-mobile-web-app-title" content="LiloPlay">
+  <meta name="mobile-web-app-capable" content="yes">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -39,6 +46,8 @@
             <button class="acc-tab" data-tab="produtos" type="button"></button>
             <button class="acc-tab" data-tab="categorias" type="button"></button>
             <button class="acc-tab" data-tab="clientes" type="button"></button>
+            <button class="acc-tab" data-tab="mensagens" type="button"></button>
+            <button class="acc-tab" data-tab="newsletter" type="button"></button>
             <button class="acc-tab" data-tab="loja" type="button"></button>
           </div>
           <div class="sep"></div>
@@ -133,6 +142,34 @@
           <div class="table-wrap"><table class="table">
             <thead><tr><th>Cliente</th><th class="hide-m">Telefone</th><th class="hide-m">Cidade</th><th class="hide-m">Cadastro</th><th></th></tr></thead>
             <tbody id="cliRows"><tr><td colspan="5" class="loading">Carregando…</td></tr></tbody>
+          </table></div>
+        </div>
+
+        <!-- ========== ADMIN: MENSAGENS DO CONTATO ========== -->
+        <div class="panel" id="panel-mensagens">
+          <div class="panel-head">
+            <div><h2>Mensagens</h2><p>Mensagens enviadas pelo formulário da página de Contato.</p></div>
+          </div>
+          <div class="toolbar">
+            <input class="input" id="msgSearch" placeholder="Buscar por nome, e-mail ou texto…">
+            <select id="msgFilter"><option value="">Todas</option><option value="new">Não lidas</option><option value="read">Lidas</option></select>
+          </div>
+          <div class="table-wrap"><table class="table">
+            <thead><tr><th>De</th><th class="hide-m">Mensagem</th><th class="hide-m">Recebida</th><th></th></tr></thead>
+            <tbody id="msgRows"><tr><td colspan="4" class="loading">Carregando…</td></tr></tbody>
+          </table></div>
+        </div>
+
+        <!-- ========== ADMIN: NEWSLETTER ========== -->
+        <div class="panel" id="panel-newsletter">
+          <div class="panel-head">
+            <div><h2>Newsletter</h2><p>E-mails cadastrados para receber novidades.</p></div>
+            <button class="btn btn-primary" type="button" id="newsCsv">Baixar planilha (CSV)</button>
+          </div>
+          <div class="toolbar"><input class="input" id="newsSearch" placeholder="Buscar e-mail…"></div>
+          <div class="table-wrap"><table class="table">
+            <thead><tr><th>E-mail</th><th>Cadastro</th><th></th></tr></thead>
+            <tbody id="newsRows"><tr><td colspan="3" class="loading">Carregando…</td></tr></tbody>
           </table></div>
         </div>
 

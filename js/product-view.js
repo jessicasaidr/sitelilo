@@ -11,10 +11,16 @@ function renderProductView(el, p, { compact = false } = {}) {
     : placeholder({ color: colors[k] }, views[k]);
   const count = photos ? photos.length : views.length;
   const cat = catById(p.cat) || { id: "", name: "Produtos" };
-  const off = p.old ? Math.round((1 - p.price / p.old) * 100) : 0;
   const swatches = ["#f43f5e", "#f97316", "#facc15", "#10b981", "#3b82f6", "#a855f7"];
-  const quantities = p.options && p.options.length ? p.options : p.digital ? ["Arquivo digital (PDF)"] : ["1 unidade", "Kit com 3", "Kit com 5"];
+  const variants = productVariants(p);   // [{label, price, old}]
   const custom = p.personalizable || p.cat === "personalizados";
+
+  /* Preço da opção escolhida (com "de/por", parcelas e Pix) */
+  const priceHTML = (v) => {
+    const off = v.old && v.old > v.price ? Math.round((1 - v.price / v.old) * 100) : 0;
+    return `<div class="price">${brl(v.price)}${off ? `<s>${brl(v.old)}</s> <span class="tag-off" style="position:static;vertical-align:middle">-${off}%</span>` : ""}</div>
+      <div class="installments" style="margin-top:4px">${installments(v.price)} · <span class="pix">${brl(v.price * (1 - STORE.pixDiscount))} no Pix</span></div>`;
+  };
 
   el.innerHTML = `
     <div class="thumbs">
@@ -25,11 +31,10 @@ function renderProductView(el, p, { compact = false } = {}) {
       ${compact ? "" : `<div class="breadcrumb" style="padding-top:0"><a href="index.html">Início</a> › <a href="produtos.html${cat.id ? `?cat=${cat.id}` : ""}">${esc(cat.name)}</a> › ${esc(p.name)}</div>`}
       <div class="sold">+${p.sold} vendidos · Idade ${p.ages}</div>
       <h1>${esc(p.name)}</h1>
-      <div class="price">${brl(p.price)}${p.old ? `<s>${brl(p.old)}</s> <span class="tag-off" style="position:static;vertical-align:middle">-${off}%</span>` : ""}</div>
-      <div class="installments" style="margin-top:4px">${installments(p.price)} · <span class="pix">${brl(p.price * (1 - STORE.pixDiscount))} no Pix</span></div>
+      <div id="pvPrice">${priceHTML(variants[0])}</div>
 
-      <div class="opt-label">Opção: <strong id="optName">${esc(quantities[0])}</strong></div>
-      <div class="chips" id="optChips">${quantities.map((q, k) => `<button type="button" class="chip ${k === 0 ? "on" : ""}">${esc(q)}</button>`).join("")}</div>
+      <div class="opt-label">Opção: <strong id="optName">${esc(variants[0].label)}</strong></div>
+      <div class="chips" id="optChips">${variants.map((v, k) => `<button type="button" class="chip ${k === 0 ? "on" : ""}" data-v="${k}">${esc(v.label)}</button>`).join("")}</div>
 
       ${p.digital ? "" : `
       <div class="opt-label">Cor principal</div>
@@ -59,9 +64,7 @@ function renderProductView(el, p, { compact = false } = {}) {
       <p style="color:var(--ink-soft);margin-top:20px">${shortDesc(p)}</p>
       <a href="produto.html?id=${p.id}" style="text-decoration:underline;font-weight:800;color:var(--primary)">Ver mais</a>` : `
       <div class="guarantees">
-        <div class="guarantee"><span class="ic p-green">${icon("shield", 20)}</span><div><strong>Compra protegida</strong><small>Seus dados cuidados durante toda a compra.</small></div></div>
-        <div class="guarantee"><span class="ic p-blue">${icon("swap", 20)}</span><div><strong>Trocas e devoluções</strong><small>Se não gostar, você pode trocar ou devolver.</small></div></div>
-      </div>
+        <div class="guarantee"><span class="ic p-green">${icon("shield", 20)}</span><div><strong>Compra protegida</strong><small>Seus dados cuidados durante toda a compra.</small></div></div>      </div>
       <div class="shipping">
         <div class="opt-label" style="margin-top:0">Meios de envio</div>
         <form class="inline-form" id="shipForm">
@@ -83,7 +86,12 @@ function renderProductView(el, p, { compact = false } = {}) {
   const chipGroup = (sel, cb) => $$(sel, el).forEach((b) => b.onclick = () => {
     $$(sel, el).forEach((x) => x.classList.remove("on")); b.classList.add("on"); cb && cb(b);
   });
-  chipGroup("#optChips .chip", (b) => $("#optName", el).textContent = b.textContent);
+  let chosen = variants[0];
+  chipGroup("#optChips .chip", (b) => {
+    chosen = variants[Number(b.dataset.v)];
+    $("#optName", el).textContent = chosen.label;
+    $("#pvPrice", el).innerHTML = priceHTML(chosen);
+  });
   chipGroup("#swatches .swatch");
   const up = $("#uploadFile", el);
   if (up) up.onchange = () => $("#uploadName", el).textContent = up.files[0]?.name || "PNG ou JPG (opcional)";
@@ -92,8 +100,8 @@ function renderProductView(el, p, { compact = false } = {}) {
   $$("[data-q]", el).forEach((b) => b.onclick = () => qty.value = Math.max(1, (parseInt(qty.value) || 1) + Number(b.dataset.q)));
   /* Comprar */
   $("#buyBtn", el).onclick = () => {
-    const opts = [$("#optName", el).textContent, $("#customName", el)?.value.trim()].filter(Boolean).join(" · ");
-    Cart.add(p.id, Math.max(1, parseInt(qty.value) || 1), opts);
+    const opts = [chosen.label, $("#customName", el)?.value.trim()].filter(Boolean).join(" · ");
+    Cart.add(p.id, Math.max(1, parseInt(qty.value) || 1), opts, chosen.label);
   };
   /* Frete (simulação) */
   const ship = $("#shipForm", el);

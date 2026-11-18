@@ -48,6 +48,8 @@ Pages.conta = async () => {
     produtos:   ["cube",   "Produtos"],
     categorias: ["puzzle", "Categorias"],
     clientes:   ["users",  "Clientes"],
+    mensagens:  ["chat",   "Mensagens"],
+    newsletter: ["mail",   "Newsletter"],
     loja:       ["house",  "Configurações"],
   };
   $$("[data-tab]", $("#tabs")).forEach((b) => {

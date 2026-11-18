@@ -118,7 +118,7 @@ create policy "perfil: admin lê todos" on public.profiles for select using (pub
 -- 3) CATEGORIAS
 -- ---------------------------------------------------------------------
 create table if not exists public.categories (
-  id         text primary key,              -- ex.: 'brinquedos-3d' (vai na URL)
+  id         text primary key,              -- ex.: 'materiais-manipulaveis' (vai na URL)
   name       text not null,
   color      text not null default 'blue',  -- blue, green, purple, indigo, magenta, orange, rose, cyan, yellow
   icon       text not null default 'star',
@@ -225,7 +225,7 @@ create policy "fotos: admin remove"   on storage.objects for delete using (bucke
 -- 7) DADOS INICIAIS (exemplos — edite/remova pelo painel admin)
 -- ---------------------------------------------------------------------
 insert into public.categories (id, name, color, icon, sort_order) values
-  ('brinquedos-3d',   'Brinquedos 3D',   'magenta', 'puzzle', 1),
+  ('materiais-manipulaveis',   'Materiais Manipuláveis', 'magenta', 'puzzle', 1),
   ('kits-educativos', 'Kits Educativos', 'blue',    'cap',    2),
   ('personalizados',  'Personalizados',  'orange',  'star',   3),
   ('jogos',           'Jogos 3D',        'rose',    'phone',  4)
@@ -233,18 +233,85 @@ on conflict (id) do nothing;
 
 insert into public.products (name, category_id, price, old_price, color, icon, sold, tags, ages, personalizable, options)
 select * from (values
-  ('Alfabeto 3D Colorido - Kit A a Z',                  'brinquedos-3d',   89.90, 119.90, 'magenta', 'puzzle', 120, array['queridinhos','promo'],        '3+',    false, array['1 unidade','Kit com 3','Kit com 5']),
-  ('Kit Números 0 a 9 com Peças de Encaixe',             'brinquedos-3d',   69.90, null,   'cyan',    'cube',    85, array['queridinhos'],                '3+',    false, array['1 unidade','Kit com 3','Kit com 5']),
-  ('Marcador de Página Clip - Letras (10 unds.)',        'brinquedos-3d',   34.90, null,   'purple',  'book',   210, array['queridinhos','lancamentos'],  '5+',    false, array['1 unidade','Kit com 3','Kit com 5']),
+  ('Alfabeto 3D Colorido - Kit A a Z',                  'materiais-manipulaveis',   89.90, 119.90, 'magenta', 'puzzle', 120, array['queridinhos','promo'],        '3+',    false, array['1 unidade','Kit com 3','Kit com 5']),
+  ('Kit Números 0 a 9 com Peças de Encaixe',             'materiais-manipulaveis',   69.90, null,   'cyan',    'cube',    85, array['queridinhos'],                '3+',    false, array['1 unidade','Kit com 3','Kit com 5']),
+  ('Marcador de Página Clip - Letras (10 unds.)',        'materiais-manipulaveis',   34.90, null,   'purple',  'book',   210, array['queridinhos','lancamentos'],  '5+',    false, array['1 unidade','Kit com 3','Kit com 5']),
   ('Chaveiro Turma da Lilo - Personalizado com Nome',    'personalizados',  29.90, null,   'orange',  'heart',   64, array['queridinhos','lancamentos'],  'Todas', true,  array['1 unidade','Kit com 3','Kit com 5']),
   ('Kit Homeschooling 1º Ano - Português e Matemática',  'kits-educativos', 149.90, null,  'blue',    'cap',     48, array['lancamentos'],                '6+',    false, array['1 unidade']),
   ('Jogo da Memória Turma da Lilo',                      'jogos',           49.90, null,   'rose',    'users',   77, array['lancamentos','queridinhos'],  '3+',    false, array['1 unidade']),
   ('Tabuada Divertida - Fichas Plastificadas',           'kits-educativos', 59.90, 79.90,  'indigo',  'trophy',  92, array['promo'],                      '7+',    false, array['1 unidade']),
-  ('Patinhos de Borracha 3D - Kit Contagem',             'brinquedos-3d',   79.90, null,   'yellow',  'cube',    33, array['promo','lancamentos'],        '2+',    false, array['1 unidade','Kit com 3']),
+  ('Patinhos de Borracha 3D - Kit Contagem',             'materiais-manipulaveis',   79.90, null,   'yellow',  'cube',    33, array['promo','lancamentos'],        '2+',    false, array['1 unidade','Kit com 3']),
   ('Caderno de Caligrafia Personalizado',                'personalizados',  44.90, null,   'cyan',    'pencil',  58, array['promo'],                      '5+',    true,  array['1 unidade']),
-  ('Quebra-Cabeça Sistema Solar 3D',                     'brinquedos-3d',   99.90, 129.90, 'indigo',  'rocket',  41, array['promo','queridinhos'],        '5+',    false, array['1 unidade']),
+  ('Quebra-Cabeça Sistema Solar 3D',                     'materiais-manipulaveis',   99.90, 129.90, 'indigo',  'rocket',  41, array['promo','queridinhos'],        '5+',    false, array['1 unidade']),
   ('Kit Atividades em Casa - Coordenação Motora',        'kits-educativos', 119.90, null,  'green',   'house',   26, array['lancamentos'],                '3+',    false, array['1 unidade']),
   ('Bingo das Sílabas',                                  'jogos',           54.90, null,   'magenta', 'flag',    69, array[]::text[],                     '5+',    false, array['1 unidade']),
   ('Cartões de Inglês Ilustrados (50 cartas)',           'jogos',           39.90, null,   'blue',    'flag',    51, array[]::text[],                     '4+',    false, array['1 unidade'])
 ) as v(name, category_id, price, old_price, color, icon, sold, tags, ages, personalizable, options)
 where not exists (select 1 from public.products);
+
+
+-- =====================================================================
+-- 8) NEWSLETTER E MENSAGENS DO CONTATO (mesmo conteúdo de 002_newsletter_contato.sql)
+-- =====================================================================
+-- 1) NEWSLETTER
+--    Visitantes só podem CADASTRAR o próprio e-mail. Só o admin vê a lista.
+-- ---------------------------------------------------------------------
+create table if not exists public.newsletter (
+  id         bigint generated by default as identity primary key,
+  email      text not null
+             check (char_length(email) <= 254 and email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
+  created_at timestamptz not null default now()
+);
+
+-- Não deixa o mesmo e-mail entrar duas vezes (ignora maiúsculas/minúsculas)
+create unique index if not exists newsletter_email_unique on public.newsletter (lower(email));
+
+alter table public.newsletter enable row level security;
+
+drop policy if exists "newsletter: todos se cadastram" on public.newsletter;
+drop policy if exists "newsletter: admin lê"          on public.newsletter;
+drop policy if exists "newsletter: admin remove"      on public.newsletter;
+
+create policy "newsletter: todos se cadastram" on public.newsletter for insert to anon, authenticated with check (true);
+create policy "newsletter: admin lê"          on public.newsletter for select using (public.is_admin());
+create policy "newsletter: admin remove"      on public.newsletter for delete using (public.is_admin());
+
+-- ---------------------------------------------------------------------
+-- 2) MENSAGENS DO FORMULÁRIO DE CONTATO
+--    Visitantes só podem ENVIAR. Só o admin lê, marca como lida e apaga.
+-- ---------------------------------------------------------------------
+create table if not exists public.contact_messages (
+  id         bigint generated by default as identity primary key,
+  nome       text not null check (char_length(nome) between 1 and 120),
+  email      text not null check (char_length(email) <= 254 and email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
+  telefone   text check (telefone is null or char_length(telefone) <= 30),
+  mensagem   text not null check (char_length(mensagem) between 1 and 5000),
+  lida       boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists contact_messages_created_idx on public.contact_messages (created_at desc);
+
+alter table public.contact_messages enable row level security;
+
+drop policy if exists "mensagens: todos enviam"   on public.contact_messages;
+drop policy if exists "mensagens: admin lê"       on public.contact_messages;
+drop policy if exists "mensagens: admin atualiza" on public.contact_messages;
+drop policy if exists "mensagens: admin remove"   on public.contact_messages;
+
+-- Ao enviar, a mensagem sempre entra como "não lida"
+create policy "mensagens: todos enviam"   on public.contact_messages for insert to anon, authenticated with check (lida = false);
+create policy "mensagens: admin lê"       on public.contact_messages for select using (public.is_admin());
+create policy "mensagens: admin atualiza" on public.contact_messages for update using (public.is_admin()) with check (public.is_admin());
+create policy "mensagens: admin remove"   on public.contact_messages for delete using (public.is_admin());
+
+
+-- =====================================================================
+-- 9) PREÇO POR OPÇÃO (mesmo conteúdo de 004_precos_por_opcao.sql)
+-- =====================================================================
+alter table public.products
+  add column if not exists variants jsonb not null default '[]'::jsonb;
+
+alter table public.products drop constraint if exists products_variants_is_array;
+alter table public.products
+  add constraint products_variants_is_array check (jsonb_typeof(variants) = 'array');
