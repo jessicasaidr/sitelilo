@@ -185,8 +185,9 @@
       $("#mosaic").innerHTML = CATEGORIES.slice(0, 3).map((c) =>
         `<a href="produtos.html?cat=${c.id}" class="p-${c.color}">${icon(c.icon, 120)}<h3>${c.name}</h3><span>Ver produtos →</span></a>`).join("");
 
-      /* Produto em destaque */
-      if (PRODUCTS[0]) renderProductView($("#featured"), PRODUCTS[0], { compact: true });
+      /* Produto em destaque ("Onde ideias viram brincadeira") — troque o nome aqui para mudar */
+      const destaque = PRODUCTS.find((p) => p.name === "Geoplano com Elásticos") || PRODUCTS[0];
+      if (destaque) renderProductView($("#featured"), destaque, { compact: true });
 
       /* Benefícios */
       $("#benefits").innerHTML = [

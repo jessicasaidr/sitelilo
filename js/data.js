@@ -31,7 +31,7 @@ const PRODUCTS = [
     images: ["assets/produtos/alfabeto-3d/capa.jpg", "assets/produtos/alfabeto-3d/1.jpg", "assets/produtos/alfabeto-3d/2.jpg", "assets/produtos/alfabeto-3d/3.jpg"],
     variants: [{ label: "1 unidade", price: 89.90, old: 119.90 }, { label: "Kit com 3", price: 249.90, old: 359.70 }, { label: "Kit com 5", price: 399.90, old: 599.50 }] },
   { id: 2,  name: "Kit Números 0 a 9 com Peças de Encaixe",        cat: "materiais-manipulaveis",   price: 69.90,              color: "cyan",    icon: "cube",   sold: 85,  tags: ["queridinhos"], ages: "3+",
-    images: ["assets/produtos/kit-numeros/capa.jpg", "assets/produtos/kit-numeros/1.jpg", "assets/produtos/kit-numeros/2.jpg", "assets/produtos/kit-numeros/3.jpg", "assets/produtos/kit-numeros/4.jpg"] },
+    images: ["assets/produtos/kit-numeros/capa.jpg", "assets/produtos/kit-numeros/1.jpg", "assets/produtos/kit-numeros/2.jpg", "assets/produtos/kit-numeros/3.jpg", "assets/produtos/kit-numeros/4.jpg", "assets/produtos/kit-numeros/5.jpg"] },
   { id: 3,  name: "Marcador de Página Clip - Letras (10 unds.)",    cat: "materiais-manipulaveis",   price: 34.90,              color: "purple",  icon: "book",   sold: 210, tags: ["queridinhos","lancamentos"], ages: "5+",
     images: ["assets/produtos/marcador-clip/capa.jpg", "assets/produtos/marcador-clip/1.jpg", "assets/produtos/marcador-clip/2.jpg"] },
   { id: 4,  name: "Chaveiro Turma da Lilo - Personalizado com Nome", cat: "personalizados", price: 29.90,              color: "orange",  icon: "heart",  sold: 64,  tags: ["queridinhos","lancamentos"], ages: "Todas",

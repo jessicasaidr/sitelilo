@@ -285,8 +285,8 @@ h1, h2, h3, h4 { font-family: var(--font-title); font-weight: 600; line-height: 
 
 /* Produto */
 .product { display: grid; grid-template-columns: 84px 1fr 1fr; gap: 24px; padding-bottom: 40px; }
-.thumbs { display: flex; flex-direction: column; gap: 10px; }
-.thumbs button { aspect-ratio: 1; border-radius: 12px; overflow: hidden; border: 3px solid transparent; padding: 0; cursor: pointer; }
+.thumbs { display: flex; flex-direction: column; gap: 10px; align-self: start; max-height: min(620px, 80vh); overflow-y: auto; padding-right: 4px; scrollbar-width: thin; }
+.thumbs button { aspect-ratio: 1; border-radius: 12px; overflow: hidden; border: 3px solid transparent; padding: 0; cursor: pointer; flex-shrink: 0; }
 .thumbs button.on { border-color: var(--indigo); }
 .main-img { aspect-ratio: 4/5; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow); }
 .main-img .ph svg { width: 36%; height: 36%; }
@@ -456,7 +456,7 @@ h1, h2, h3, h4 { font-family: var(--font-title); font-weight: 600; line-height: 
   .filters.open { display: block; }
   .filter-toggle { display: inline-flex; }
   .product { grid-template-columns: 1fr; }
-  .thumbs { flex-direction: row; order: 2; }
+  .thumbs { flex-direction: row; order: 2; max-height: none; overflow-x: auto; overflow-y: hidden; padding: 0 0 6px; }
   .thumbs button { width: 68px; }
   .contact { grid-template-columns: 1fr; gap: 30px; }
   .footer-grid { grid-template-columns: 1fr; gap: 30px; }
