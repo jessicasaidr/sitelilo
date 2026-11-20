@@ -29,7 +29,7 @@ function renderProductView(el, p, { compact = false } = {}) {
     <div class="main-img" id="mainImg">${slide(0)}</div>
     <div class="p-info">
       ${compact ? "" : `<div class="breadcrumb" style="padding-top:0"><a href="index.html">Início</a> › <a href="produtos.html${cat.id ? `?cat=${cat.id}` : ""}">${esc(cat.name)}</a> › ${esc(p.name)}</div>`}
-      <div class="sold">+${p.sold} vendidos · Idade ${p.ages}</div>
+      <div class="sold">${p.sold > 0 ? `+${p.sold} vendidos · ` : ""}Idade ${esc(p.ages)}</div>
       <h1>${esc(p.name)}</h1>
       <div id="pvPrice">${priceHTML(variants[0])}</div>
 
