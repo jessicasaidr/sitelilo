@@ -427,6 +427,19 @@ function bindForms() {
 }
 
 /* ---------- Inicialização ---------- */
+/* ---------- Proteção das fotos dos produtos ----------
+   Bloqueia botão direito / toque longo / arrastar nas fotos e o Ctrl+S (salvar página).
+   Obs.: nenhum site consegue impedir 100% (ex.: captura de tela). */
+(() => {
+  const FOTO = ".ph-img, .hero-pic";
+  const naFoto = (e) => e.target instanceof Element && e.target.closest(FOTO);
+  document.addEventListener("contextmenu", (e) => { if (naFoto(e)) e.preventDefault(); });
+  document.addEventListener("dragstart", (e) => { if (naFoto(e)) e.preventDefault(); });
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") e.preventDefault();
+  });
+})();
+
 document.addEventListener("DOMContentLoaded", async () => {
   if (window.DB) await DB.init();
   renderHeader();

@@ -518,5 +518,9 @@ h1, h2, h3, h4 { font-family: var(--font-title); font-weight: 600; line-height: 
 .ph-img { background: #fff !important; }
 .ph-img img { width: 100%; height: 100%; object-fit: contain; }
 
+/* Proteção das fotos: sem "Salvar imagem", sem arrastar, sem menu de toque longo */
+.ph-img, .hero-pic { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.ph-img img, .hero-pic img { pointer-events: none; -webkit-user-drag: none; user-drag: none; }
+
 /* "a partir de" nos cards quando as opções têm preços diferentes */
 .from { font-size: .75rem; color: var(--ink-soft); font-weight: 700; margin-bottom: -10px; }
