@@ -186,7 +186,7 @@
         `<a href="produtos.html?cat=${c.id}" class="p-${c.color}">${icon(c.icon, 120)}<h3>${c.name}</h3><span>Ver produtos →</span></a>`).join("");
 
       /* Produto em destaque ("Onde ideias viram brincadeira") — troque o nome aqui para mudar */
-      const destaque = PRODUCTS.find((p) => p.name === "Geoplano com Elásticos") || PRODUCTS[0];
+      const destaque = PRODUCTS.find((p) => ["Tabuleiro Alfanumérico de Encaixe", "Geoplano com Elásticos"].includes(p.name)) || PRODUCTS[0];
       if (destaque) renderProductView($("#featured"), destaque, { compact: true });
 
       /* Benefícios */
