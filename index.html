@@ -31,7 +31,7 @@
               <div class="hero-kicker" style="color:var(--magenta-t)">Materiais manipuláveis educativos</div>
               <h1>Aprender brincando <em>é muito mais divertido.</em></h1>
               <div class="hero-line" style="color:var(--magenta-t)"></div>
-              <p>Alfabeto, números e quebra-cabeças impressos em 3D, coloridos e seguros para os pequenos explorarem.</p>
+              <p>Material dourado, letras e números móveis, carimbos para massinha e peças de contagem impressos em 3D, coloridos e seguros para os pequenos explorarem.</p>
               <div class="hero-feats" id="heroFeats"></div>
               <a href="produtos.html?cat=materiais-manipulaveis" class="btn btn-primary">Conhecer materiais</a>
             </div>
@@ -48,7 +48,7 @@
               <div class="hero-kicker" style="color:var(--rose-t)">Jogos 3D</div>
               <h1>Diversão para jogar <em>em família.</em></h1>
               <div class="hero-line" style="color:var(--rose-t)"></div>
-              <p>Jogos impressos em 3D com a Turma da Lilo para aprender, rir e brincar juntos.</p>
+              <p>Tangram, ábaco, caça-palavras deslizante e tabuleiro de cliques impressos em 3D para aprender, rir e brincar juntos.</p>
               <a href="produtos.html?cat=jogos" class="btn btn-primary" style="margin-top:20px">Ver jogos 3D</a>
             </div>
             <div class="hero-art">
@@ -63,7 +63,7 @@
               <div class="hero-kicker" style="color:var(--orange-t)">Personalizados</div>
               <h1>Com o nome do seu <em>pequeno campeão.</em></h1>
               <div class="hero-line" style="color:var(--orange-t)"></div>
-              <p>Chaveiros, cadernos e marcadores da Turma da Lilo personalizados do seu jeito.</p>
+              <p>Plaquinhas e placa de nome em relevo com o nome da criança, para reconhecer, ler e marcar os seus materiais.</p>
               <a href="produtos.html?cat=personalizados" class="btn btn-primary" style="margin-top:20px">Personalize do seu jeito</a>
             </div>
             <div class="hero-art">
@@ -159,6 +159,21 @@
     Pages.home = () => {
       /* Banners */
       $$(".blob").forEach((b) => b.innerHTML = icon(b.dataset.ic, 120));
+      /* Fotos de produtos no lugar das molduras com ícones (3 por banner, da categoria do banner) */
+      const comFoto = PRODUCTS.filter((p) => p.images && p.images.length);
+      const usados = new Set();
+      ["materiais-manipulaveis", "jogos", "personalizados"].forEach((cat, k) => {
+        const art = $$(".hero-art")[k]; if (!art) return;
+        const rank = (p) => (p.tags.includes("queridinhos") ? 0 : p.tags.includes("lancamentos") ? 1 : 2);
+        let picks = comFoto.filter((p) => p.cat === cat && !usados.has(p.id)).sort((a, b) => rank(a) - rank(b));
+        if (picks.length < 3) picks = picks.concat(comFoto.filter((p) => p.cat !== cat && !usados.has(p.id) && !picks.includes(p)));
+        picks = picks.slice(0, 3);
+        if (picks.length < 3) return; /* sem fotos suficientes: mantém as ilustrações */
+        picks.forEach((p) => usados.add(p.id));
+        art.classList.add("hero-pics");
+        art.innerHTML = picks.map((p, i) =>
+          `<a class="hero-pic hp${i + 1}" href="produto.html?id=${p.id}" aria-label="${esc(p.name)}"><img src="${esc(p.images[0])}" alt="${esc(p.name)}"${k ? ' loading="lazy"' : ""}></a>`).join("");
+      });
       $("#heroPrev").innerHTML = icon("left"); $("#heroNext").innerHTML = icon("right");
       $("#heroFeats").innerHTML = [["cube","Impressão 3D"],["shield","Material seguro"],["gift","Ideal para presentear"],["cap","Feito por educadores"]]
         .map(([i, t]) => `<div class="hero-feat"><span class="ic" style="color:var(--magenta-t)">${icon(i)}</span>${t}</div>`).join("");
@@ -186,7 +201,7 @@
         `<a href="produtos.html?cat=${c.id}" class="p-${c.color}">${icon(c.icon, 120)}<h3>${c.name}</h3><span>Ver produtos →</span></a>`).join("");
 
       /* Produto em destaque ("Onde ideias viram brincadeira") — troque o nome aqui para mudar */
-      const destaque = PRODUCTS.find((p) => ["Tabuleiro Alfanumérico de Encaixe", "Geoplano com Elásticos"].includes(p.name)) || PRODUCTS[0];
+      const destaque = PRODUCTS.find((p) => ["Tabuleiro Alfanumérico de Cliques - Tipo Teclado", "Tabuleiro Alfanumérico de Encaixe", "Geoplano com Elásticos"].includes(p.name)) || PRODUCTS[0];
       if (destaque) renderProductView($("#featured"), destaque, { compact: true });
 
       /* Benefícios */
