@@ -58,7 +58,7 @@ const Reviews = {
         </div>
       </div>
       <div id="rvForm"></div>
-      <div class="rv-list">${total ? list.map((r) => this.item(r)).join("") : `<p class="rv-empty">Seja o primeiro a avaliar este produto depois da sua compra ♡</p>`}</div>`;
+      <div class="rv-list">${list.map((r) => this.item(r)).join("")}</div>`;
 
     this.drawForm($("#rvForm", el), p, mine, canReview);
     $$("[data-rv-del]", el).forEach((b) => b.onclick = async () => {
