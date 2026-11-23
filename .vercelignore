@@ -1,0 +1,9 @@
+# Arquivos que não vão para o site publicado na Vercel
+# (servidor de teste local, fotos originais, SQLs e imagens de referência)
+dev-server.js
+fotos/
+inspirar/
+supabase/
+Modelo4.png
+lilo.png
+README.md

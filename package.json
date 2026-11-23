@@ -4,7 +4,8 @@
   "private": true,
   "description": "Loja LiloPlay (site estático)",
   "scripts": {
-    "dev": "node server.js",
-    "start": "node server.js"
+    "dev": "node dev-server.js",
+    "start": "node dev-server.js",
+    "build": "echo Site estatico: nao precisa de build. Publique a pasta do projeto como esta."
   }
 }
