@@ -1,0 +1,125 @@
+<!--
+  =====================================================================
+  E-MAIL DE CONFIRMAÇÃO DE CADASTRO — LiloPlay
+  Onde usar: Supabase > Authentication > Emails > "Confirm sign up" > Source
+  Assunto sugerido (campo Subject):  Confirme seu e-mail ♡ LiloPlay
+  - Não apague {{ .ConfirmationURL }} (é o link de confirmação).
+  - O e-mail começa direto pelo título (sem imagem de logo, que alguns e-mails bloqueiam).
+  =====================================================================
+-->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Confirme seu e-mail - LiloPlay</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; padding: 0; background: #fffbf3; }
+    a { color: #4338ca; }
+    @media (max-width: 600px) {
+      .card { padding: 28px 22px !important; }
+      .title { font-size: 24px !important; }
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background:#fffbf3;">
+  <!-- Texto de pré-visualização (aparece ao lado do assunto na caixa de entrada) -->
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#fffbf3;">
+    Falta só um clique para ativar sua conta no LiloPlay ♡
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fffbf3;">
+    <tr>
+      <td align="center" style="padding:32px 14px;">
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+
+          <!-- Faixa arco-íris (mesmas cores da barra do topo do site) -->
+          <tr>
+            <td style="border-radius:18px 18px 0 0;overflow:hidden;line-height:0;font-size:0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td height="8" style="background:#f43f5e;border-radius:18px 0 0 0;"></td>
+                  <td height="8" style="background:#f97316;"></td>
+                  <td height="8" style="background:#d97706;"></td>
+                  <td height="8" style="background:#10b981;"></td>
+                  <td height="8" style="background:#3b82f6;"></td>
+                  <td height="8" style="background:#a855f7;border-radius:0 18px 0 0;"></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Cartão -->
+          <tr>
+            <td class="card" style="background:#ffffff;border-radius:0 0 22px 22px;padding:36px 40px;border:1px solid #ebe5f3;border-top:0;box-shadow:0 14px 34px rgba(67,56,202,.10);">
+
+              <!-- Título -->
+              <h1 class="title" style="margin:0 0 10px;font-family:'Fredoka','Nunito',Arial,sans-serif;font-weight:600;font-size:28px;line-height:1.2;color:#4338ca;text-align:center;">
+                Que bom ter você aqui! ♡
+              </h1>
+              <p style="margin:0 0 26px;font-family:'Nunito',Arial,sans-serif;font-size:16px;line-height:1.6;color:#6b6785;text-align:center;">
+                Falta só um passo para ativar sua conta no <strong style="color:#2e2a4a;">LiloPlay</strong>.<br>
+                Confirme seu e-mail clicando no botão abaixo:
+              </p>
+
+              <!-- Botão -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 26px;">
+                <tr>
+                  <td align="center" bgcolor="#2563eb" style="border-radius:14px;background:#2563eb;box-shadow:0 8px 18px rgba(37,99,235,.28);">
+                    <a href="{{ .ConfirmationURL }}" target="_blank"
+                       style="display:inline-block;padding:15px 34px;font-family:'Fredoka','Nunito',Arial,sans-serif;font-weight:600;font-size:17px;color:#ffffff;text-decoration:none;border-radius:14px;">
+                      Confirmar meu e-mail
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- O que vem depois -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#e0e7ff;border-radius:14px;">
+                <tr>
+                  <td style="padding:16px 20px;font-family:'Nunito',Arial,sans-serif;font-size:14px;line-height:1.6;color:#2e2a4a;">
+                    <strong style="color:#4338ca;">Depois de confirmar, você pode:</strong><br>
+                    ✓ Finalizar suas compras com seus dados já preenchidos<br>
+                    ✓ Acompanhar seus pedidos em <em>Minha conta</em><br>
+                    ✓ Avaliar os produtos que comprou
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Link alternativo -->
+              <p style="margin:24px 0 0;font-family:'Nunito',Arial,sans-serif;font-size:12px;line-height:1.6;color:#6b6785;text-align:center;">
+                O botão não funcionou? Copie e cole este link no navegador:<br>
+                <a href="{{ .ConfirmationURL }}" style="color:#4338ca;word-break:break-all;">{{ .ConfirmationURL }}</a>
+              </p>
+
+              <!-- Divisor pontilhado (como no site) -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 18px;">
+                <tr><td style="border-top:2px dashed #e0e7ff;font-size:0;line-height:0;">&nbsp;</td></tr>
+              </table>
+
+              <p style="margin:0;font-family:'Nunito',Arial,sans-serif;font-size:12px;line-height:1.6;color:#6b6785;text-align:center;">
+                Se você não criou uma conta no LiloPlay, é só ignorar este e-mail.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Rodapé -->
+          <tr>
+            <td align="center" style="padding:22px 10px 0;font-family:'Nunito',Arial,sans-serif;font-size:12px;line-height:1.7;color:#6b6785;">
+              <strong style="font-family:'Fredoka','Nunito',Arial,sans-serif;font-weight:600;color:#4338ca;font-size:14px;">LiloPlay</strong><br>
+              Materiais manipuláveis e educativos que encantam<br>
+              <a href="https://instagram.com/plataformaliloplay" style="color:#c026d3;text-decoration:none;font-weight:700;">@plataformaliloplay</a>
+              &nbsp;·&nbsp;
+              <a href="https://wa.me/5531972476961" style="color:#10b981;text-decoration:none;font-weight:700;">WhatsApp</a>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

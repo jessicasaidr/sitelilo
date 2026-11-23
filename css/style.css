@@ -286,8 +286,11 @@ h1, h2, h3, h4 { font-family: var(--font-title); font-weight: 600; line-height: 
 .field textarea { min-height: 130px; resize: vertical; }
 .pass-wrap { position: relative; }
 .pass-wrap button { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: 0; cursor: pointer; color: var(--ink-soft); }
-.form-msg { padding: 12px 14px; border-radius: 12px; background: var(--green-1); color: #047857; font-weight: 700; margin-top: 12px; display: none; }
+/* Mensagens de formulário discretas (mesmo estilo do aviso "Finalizar compra"): só texto, sem caixa */
+.form-msg { padding: 0; border-radius: 0; background: none; color: var(--green-t); font-weight: 600; font-size: .9rem; margin-top: 10px; display: none; }
 .form-msg.show { display: block; }
+.form-msg.form-error { color: var(--rose-t); }
+.form-msg.form-warn { color: var(--ink-soft); }
 
 /* ---------- Páginas internas ---------- */
 .breadcrumb { font-size: .82rem; color: var(--ink-soft); padding: 22px 0 6px; }

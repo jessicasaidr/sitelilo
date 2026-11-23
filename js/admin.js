@@ -548,9 +548,28 @@ const Admin = {
         <td><div class="t-actions">
           ${c.telefone ? `<a class="icon-btn" style="background:#dcfce7;color:#16a34a" href="https://wa.me/${waNumber(c.telefone)}" target="_blank" rel="noopener" title="WhatsApp">${icon("wa", 18)}</a>` : ""}
           <button type="button" class="icon-btn" data-cli="${c.id}" title="Ver dados">${icon("eye", 18)}</button>
+          ${c.id !== DB.user.id ? `<button type="button" class="icon-btn danger" data-cli-del="${c.id}" title="Remover cliente">${icon("trash", 18)}</button>` : ""}
         </div></td>
       </tr>`).join("") : `<tr><td colspan="5" class="loading">${this.clients.length ? "Nenhum cliente encontrado." : "Nenhum cliente cadastrado ainda."}</td></tr>`;
     $$("[data-cli]").forEach((b) => b.onclick = () => this.viewClient(this.clients.find((c) => c.id === b.dataset.cli)));
+    $$("[data-cli-del]").forEach((b) => b.onclick = () => this.deleteClient(this.clients.find((c) => c.id === b.dataset.cliDel)));
+  },
+
+  /* Remove o cliente de verdade (login + perfil + pedidos + avaliações) — função admin_delete_user (SQL 057) */
+  async deleteClient(c) {
+    if (!c) return;
+    const quem = c.nome || c.email || "este cliente";
+    if (!confirm(`Remover ${quem}?\n\nA conta, o login, os pedidos e as avaliações dessa pessoa serão apagados do Supabase. Isso não pode ser desfeito.`)) return;
+    const { error } = await DB.client.rpc("admin_delete_user", { target: c.id });
+    if (error) {
+      alert(/not find|does not exist|schema cache/i.test(error.message)
+        ? "Rode o SQL 057 no Supabase para ativar a remoção de clientes."
+        : "Não foi possível remover: " + error.message);
+      return;
+    }
+    this.clients = this.clients.filter((x) => x.id !== c.id);
+    this.renderClients();
+    toast("Cliente removido.");
   },
 
   viewClient(c) {

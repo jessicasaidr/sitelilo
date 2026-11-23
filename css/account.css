@@ -38,8 +38,8 @@
 .stat strong { display: block; font-family: var(--font-title); font-size: 1.8rem; font-weight: 600; line-height: 1.1; }
 .stat span { font-size: .82rem; font-weight: 800; }
 
-.form-msg.form-error { background: var(--rose-1); color: #be123c; }
-.form-msg.form-warn { background: var(--yellow-1); color: #92400e; margin-bottom: 18px; }
+.form-msg.form-error { background: none; color: var(--rose-t); }
+.form-msg.form-warn { background: none; color: var(--ink-soft); margin-bottom: 18px; }
 
 /* Tabela */
 .toolbar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }

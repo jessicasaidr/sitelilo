@@ -112,16 +112,24 @@ function maxParcelas() {
 function cardBase(pix) {
   return arredCima(pix * (1 + (STORE.cardFees[0] || 0)));
 }
-/* Parcelado a partir de um valor normal (de um produto ou do total do carrinho) */
-function parceladoDe(normal, n) {
-  if (n <= 1) return Math.round(normal * 100) / 100;
-  const fee = STORE.cardFees[Math.min(n, STORE.cardFees.length) - 1] || 0;
-  return arredCima(normal * (1 + fee));
+/* "Cliente paga" do app da InfinitePay para um valor que a loja recebe, em Nx (1x, 2x, 3x) */
+function parceladoDe(recebe, n) {
+  const fee = STORE.cardFees[Math.min(Math.max(n, 1), STORE.cardFees.length) - 1] || 0;
+  return arredCima(recebe * (1 + fee));
 }
+/* O QUE A LOJA RECEBE no cartão = o valor do PIX (é o que se digita em "você recebe" no app).
+   Ex.: Placas, Pix 45,90 */
+function receiveOf(v) {
+  if (!hasCardFees()) return v.price;
+  return pixOf(v);
+}
+/* O QUE O CLIENTE PAGA (igual ao app com "você recebe" = Pix):
+   Placas, Pix 45,90 → à vista (azul) 48,83 · 2x de 25,91 · 3x de 17,49 */
 function cardTotal(v, n = 1) {
   if (!hasCardFees()) return v.price;
-  return parceladoDe(cardBase(pixOf(v)), n);
+  return parceladoDe(receiveOf(v), n);
 }
+const blueOf = (v) => cardTotal(v, 1);   // valor à vista (azul)
 /* Arredonda para cima no centavo (como a InfinitePay), ignorando “sujeira” de ponto flutuante */
 function arredCima(x) { return Math.ceil(Math.round(x * 1e6) / 1e4) / 100; }
 /* Valor de cada parcela */
@@ -344,15 +352,23 @@ const Cart = {
     this.save(items);
   },
   /* Preço unitário do item, de acordo com a opção escolhida */
-  unit(i) { const p = productById(i.id); return p ? variantFor(p, i.variant).price : 0; },
+  unit(i) {
+    const p = productById(i.id); if (!p) return 0;
+    const v = variantFor(p, i.variant);
+    return hasCardFees() ? blueOf(v) : v.price;   // carrinho: valor à vista (azul) de cada produto
+  },
   /* Produtos no Pix */
   pixTotal() { return this.items().reduce((s, i) => { const p = productById(i.id); return s + (p ? pixOf(variantFor(p, i.variant)) : 0) * i.qty; }, 0); },
   /* Produtos no cartão: 1x = soma do valor normal de cada produto; 2x/3x = taxa da parcela sobre esse total */
   productsCard(n = 1) {
-    /* Total normal = soma do valor normal de cada produto; parcelas calculadas sobre esse total */
     if (hasCardFees()) {
-      const normal = this.items().reduce((s, i) => { const p = productById(i.id); return s + (p ? cardBase(pixOf(variantFor(p, i.variant))) : 0) * i.qty; }, 0);
-      return parceladoDe(normal, n);
+      const items = this.items().filter((i) => productById(i.id));
+      const unidades = items.reduce((s, i) => s + i.qty, 0);
+      /* 1 produto só: igual à página do produto */
+      if (unidades === 1) return cardTotal(variantFor(productById(items[0].id), items[0].variant), n);
+      /* 2 ou mais: total à vista = soma dos valores azuis; 2x/3x = app sobre esse total */
+      const azul = Math.round(items.reduce((s, i) => s + blueOf(variantFor(productById(i.id), i.variant)) * i.qty, 0) * 100) / 100;
+      return n <= 1 ? azul : parceladoDe(azul, n);
     }
     const sum = this.items().reduce((s, i) => { const p = productById(i.id); return s + (p ? cardTotal(variantFor(p, i.variant), n) : 0) * i.qty; }, 0);
     return Math.round(sum * 100) / 100;
@@ -381,8 +397,7 @@ const Cart = {
   cardTotalN(n) {
     if (hasCardFees()) {
       const ship = this.shipPrice();
-      const normal = this.productsCard(1) + (ship ? cardBase(ship) : 0);   // total normal (produtos + frete)
-      return parceladoDe(normal, n);
+      return Math.round((this.productsCard(n) + (ship ? parceladoDe(ship, n) : 0)) * 100) / 100;
     }
     return Math.round((this.productsCard(n) + this.shipPrice()) * 100) / 100;
   },
