@@ -66,6 +66,23 @@ function placeholder(p, ic) {
   return `<div class="ph p-${p.color || "blue"}">${icon(ic || p.icon, 120)}</div>`;
 }
 
+/* Descrição do produto: parágrafos, {opcao} = opção escolhida (ex.: "50 unidades")
+   e "Plataforma LiloPlay" em destaque com link para o Instagram */
+function descHTML(text, opcao) {
+  const ig = `https://instagram.com/${STORE.instagram}`;
+  return String(text || "").split(/\n\s*\n/).filter((par) => par.trim()).map((par) => {
+    let h = esc(par.replace(/\{opcao\}/gi, opcao || "")).replace(/\n/g, "<br>");
+    h = h.replace(/Plataforma LiloPlay/g, `<a href="${ig}" target="_blank" rel="noopener" class="desc-link">Plataforma LiloPlay</a>`);
+    return `<p>${h}</p>`;
+  }).join("");
+}
+
+/* Link do WhatsApp com mensagem pronta pedindo mais informações (rodapé e botão flutuante) */
+function waInfo() {
+  const msg = `Olá! Vim pelo site do ${STORE.name} e gostaria de mais informações sobre os materiais. 😊`;
+  return `https://wa.me/${STORE.whatsapp}?text=${encodeURIComponent(msg)}`;
+}
+
 function installments(price) {
   const n = STORE.maxInstallments;
   return `${n}x de ${brl(price / n)} sem juros`;
@@ -76,6 +93,10 @@ function productVariants(p) {
   if (p.variants && p.variants.length) return p.variants;
   const labels = p.options && p.options.length ? p.options : ["1 unidade"];
   return labels.map((label) => ({ label, price: p.price, old: p.old || null }));
+}
+/* Valor no Pix da opção: o cadastrado na opção ou, se não houver, o preço com o desconto Pix da loja */
+function pixOf(v) {
+  return v && v.pix != null && !isNaN(v.pix) ? v.pix : Math.round(v.price * (1 - STORE.pixDiscount) * 100) / 100;
 }
 function variantFor(p, label) {
   const vs = productVariants(p);
@@ -103,7 +124,7 @@ function productCard(p) {
     ${multi ? `<div class="from">a partir de</div>` : ""}
     <div class="price">${brl(v.price)}${off ? `<s>${brl(v.old)}</s>` : ""}</div>
     <div class="installments">${installments(v.price)}</div>
-    <div class="pix">${brl(v.price * (1 - STORE.pixDiscount))} no Pix</div>
+    <div class="pix">${brl(pixOf(v))} no Pix</div>
   </a>`;
 }
 
@@ -175,7 +196,7 @@ function renderFooter() {
           <span>${STORE.address}</span>
         </div>
         <div class="socials">
-          <a href="https://instagram.com/${STORE.instagram}" target="_blank" rel="noopener" aria-label="Instagram">${icon("insta", 20)}</a>          <a href="https://wa.me/${STORE.whatsapp}" target="_blank" rel="noopener" aria-label="WhatsApp">${icon("wa", 20)}</a>
+          <a href="https://instagram.com/${STORE.instagram}" target="_blank" rel="noopener" aria-label="Instagram">${icon("insta", 20)}</a>          <a href="${waInfo()}" target="_blank" rel="noopener" aria-label="WhatsApp">${icon("wa", 20)}</a>
         </div>
       </div>
       <div>
@@ -205,7 +226,7 @@ function renderFooter() {
       <div style="align-self:end">© ${new Date().getFullYear()} ${STORE.name}. Todos os direitos reservados.</div>
     </div>
   </footer>
-  <a class="whats" href="https://wa.me/${STORE.whatsapp}" target="_blank" rel="noopener" aria-label="Fale conosco pelo WhatsApp">${icon("wa", 30)}</a>
+  <a class="whats" href="${waInfo()}" target="_blank" rel="noopener" aria-label="Fale conosco pelo WhatsApp">${icon("wa", 30)}</a>
   <div class="cookie" id="cookie">
     <span>Ao navegar por este site você aceita o uso de <strong>cookies</strong> para agilizar a sua experiência de compra.</span>
     <button class="btn btn-primary" style="padding:8px 14px" id="cookieOk" type="button">Entendi</button>
@@ -244,6 +265,8 @@ const Cart = {
   /* Preço unitário do item, de acordo com a opção (kit) escolhida */
   unit(i) { const p = productById(i.id); return p ? variantFor(p, i.variant).price : 0; },
   total() { return this.items().reduce((s, i) => s + this.unit(i) * i.qty, 0); },
+  /* Total no Pix (soma o valor Pix de cada opção) */
+  pixTotal() { return this.items().reduce((s, i) => { const p = productById(i.id); return s + (p ? pixOf(variantFor(p, i.variant)) : 0) * i.qty; }, 0); },
   open() { $("#drawer").classList.add("show"); $("#overlay").classList.add("show"); },
   close() { $("#drawer").classList.remove("show"); $("#overlay").classList.remove("show"); },
   cep() { return store.get("lilo_cep", ""); },
@@ -270,7 +293,7 @@ const Cart = {
       pr.rua ? `Endereço: ${pr.rua}, ${pr.numero || "s/n"}${pr.complemento ? " - " + pr.complemento : ""} - ${pr.bairro || ""} - ${pr.cidade || ""}/${pr.estado || ""} - CEP ${pr.cep || ""}` : "",
     ].filter((l) => l !== "") : [];
     const msg = [
-      `Olá! Gostaria de finalizar meu pedido na ${STORE.name}:`,
+      `Olá! Gostaria de finalizar meu pedido no ${STORE.name}:`,
       ...(client.length ? ["", ...client] : []),
       "",
       ...lines,
@@ -278,7 +301,7 @@ const Cart = {
       `Subtotal: ${brl(total)}`,
       `Frete: ${free ? "GRÁTIS" : "a combinar"}${cep ? ` (CEP ${cep})` : ""}`,
       `Total: ${brl(total)}${free ? "" : " + frete"}`,
-      `No Pix: ${brl(total * (1 - STORE.pixDiscount))}${free ? "" : " + frete"}`,
+      `No Pix: ${brl(this.pixTotal())}${free ? "" : " + frete"}`,
       "",
       "Aguardo as informações para pagamento e entrega.",
     ].join("\n");
@@ -349,7 +372,7 @@ const Cart = {
       <div class="row light"><span>Subtotal (sem frete):</span><span>${brl(total)}</span></div>
       <div class="row light"><span>Frete:</span><span>${shipText}</span></div>
       <div class="row big"><span>Total:</span><span>${brl(total)}</span></div>
-      <div class="pix" style="text-align:right;margin-top:-6px">ou ${brl(total * (1 - STORE.pixDiscount))} no Pix</div>
+      <div class="pix" style="text-align:right;margin-top:-6px">ou ${brl(this.pixTotal())} no Pix</div>
       <button class="btn btn-primary btn-block btn-lg" type="button" id="checkout">Iniciar compra</button>
       <small class="checkout-note">${icon("wa", 14)} Você será direcionado ao WhatsApp para concluir o pedido.</small>
       <a href="produtos.html" class="see-more" id="keepShopping">Ver mais produtos</a>`;

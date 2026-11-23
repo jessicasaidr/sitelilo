@@ -11,7 +11,6 @@ function renderProductView(el, p, { compact = false } = {}) {
     : placeholder({ color: colors[k] }, views[k]);
   const count = photos ? photos.length : views.length;
   const cat = catById(p.cat) || { id: "", name: "Produtos" };
-  const swatches = ["#f43f5e", "#f97316", "#facc15", "#10b981", "#3b82f6", "#a855f7"];
   const variants = productVariants(p);   // [{label, price, old}]
   const custom = p.personalizable || p.cat === "personalizados";
 
@@ -19,7 +18,7 @@ function renderProductView(el, p, { compact = false } = {}) {
   const priceHTML = (v) => {
     const off = v.old && v.old > v.price ? Math.round((1 - v.price / v.old) * 100) : 0;
     return `<div class="price">${brl(v.price)}${off ? `<s>${brl(v.old)}</s> <span class="tag-off" style="position:static;vertical-align:middle">-${off}%</span>` : ""}</div>
-      <div class="installments" style="margin-top:4px">${installments(v.price)} · <span class="pix">${brl(v.price * (1 - STORE.pixDiscount))} no Pix</span></div>`;
+      <div class="installments" style="margin-top:4px">${installments(v.price)} · <span class="pix">${brl(pixOf(v))} no Pix</span></div>`;
   };
 
   el.innerHTML = `
@@ -33,12 +32,12 @@ function renderProductView(el, p, { compact = false } = {}) {
       <h1>${esc(p.name)}</h1>
       <div id="pvPrice">${priceHTML(variants[0])}</div>
 
-      <div class="opt-label">Opção: <strong id="optName">${esc(variants[0].label)}</strong></div>
-      <div class="chips" id="optChips">${variants.map((v, k) => `<button type="button" class="chip ${k === 0 ? "on" : ""}" data-v="${k}">${esc(v.label)}</button>`).join("")}</div>
+      <div class="opt-label"${variants.length === 1 && /^(1 )?unidade$/i.test(variants[0].label) ? ' style="display:none"' : ""}>${variants.length === 1 ? "" : "Opção: "}<strong id="optName">${esc(variants[0].label)}</strong></div>
+      <div class="chips" id="optChips"${variants.length === 1 ? ' style="display:none"' : ""}>${variants.map((v, k) => `<button type="button" class="chip ${k === 0 ? "on" : ""}" data-v="${k}">${esc(v.label)}</button>`).join("")}</div>
 
       ${p.digital ? "" : `
       <div class="opt-label">Cor principal</div>
-      <div class="chips" id="swatches">${swatches.map((c, k) => `<button type="button" class="swatch ${k === 0 ? "on" : ""}" style="background:${c}" aria-label="Cor ${k + 1}"></button>`).join("")}</div>`}
+      <div class="colors-note">${icon("chat", 16)} Verificar cores disponíveis</div>`}
 
       ${custom ? `
       <div class="opt-label">Nome para personalizar (opcional)</div>
@@ -91,8 +90,8 @@ function renderProductView(el, p, { compact = false } = {}) {
     chosen = variants[Number(b.dataset.v)];
     $("#optName", el).textContent = chosen.label;
     $("#pvPrice", el).innerHTML = priceHTML(chosen);
+    el.dispatchEvent(new CustomEvent("opcao", { detail: chosen }));
   });
-  chipGroup("#swatches .swatch");
   const up = $("#uploadFile", el);
   if (up) up.onchange = () => $("#uploadName", el).textContent = up.files[0]?.name || "PNG ou JPG (opcional)";
   /* Quantidade */
@@ -119,7 +118,7 @@ function renderProductView(el, p, { compact = false } = {}) {
 
 function shortDesc(p) {
   if (p.description) {
-    const first = p.description.split(/\n\s*\n/)[0];
+    const first = p.description.split(/\n\s*\n/)[0].replace(/\{opcao\}/gi, productVariants(p)[0].label);
     return esc(first.length > 260 ? first.slice(0, 257) + "…" : first);
   }
   const cat = catById(p.cat) || { name: "LiloPlay" };

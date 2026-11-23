@@ -47,9 +47,12 @@
       renderProductView($("#product"), p);
 
       /* Descrição cadastrada no painel admin (cada parágrafo separado por linha em branco) */
+      const fillDesc = (v) => { const t = $("#descText"); if (t) t.innerHTML = descHTML(p.description, v.label); };
       if (p.description) {
-        $("#desc").innerHTML = `<h3 style="font-size:1.1rem;color:var(--ink)">Descrição</h3>` +
-          p.description.split(/\n\s*\n/).map((par) => `<p>${esc(par).replace(/\n/g, "<br>")}</p>`).join("");
+        $("#desc").innerHTML = `<h3 style="font-size:1.1rem;color:var(--ink)">Descrição</h3><div id="descText"></div>`;
+        fillDesc(productVariants(p)[0]);
+        /* Troca a quantidade na descrição quando o cliente escolhe outra opção */
+        $("#product").addEventListener("opcao", (e) => fillDesc(e.detail));
       } else $("#desc").innerHTML = `
         <h3 style="font-size:1.1rem;color:var(--ink)">Descrição</h3>
         <p>${shortDesc(p)}</p>

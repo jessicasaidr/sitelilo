@@ -190,8 +190,8 @@ const Admin = {
        antigas usando o preço do produto — é só ajustar o valor de cada uma. */
     const fmt = (v) => (v === "" || v == null ? "" : Number(v).toFixed(2));
     let variants = Array.isArray(r.variants) && r.variants.length
-      ? r.variants.map((v) => ({ label: v.label, price: fmt(v.price), old: fmt(v.old_price) }))
-      : (r.options && r.options.length ? r.options : ["1 unidade"]).map((label) => ({ label, price: fmt(r.price), old: fmt(r.old_price) }));
+      ? r.variants.map((v) => ({ label: v.label, price: fmt(v.price), pix: fmt(v.pix), old: fmt(v.old_price) }))
+      : (r.options && r.options.length ? r.options : ["1 unidade"]).map((label) => ({ label, price: fmt(r.price), pix: "", old: fmt(r.old_price) }));
 
     const body = `
       <div class="form-grid">
@@ -204,11 +204,11 @@ const Admin = {
 
       <div class="field"><label>Opções e preços *</label>
         <div class="variants">
-          <div class="v-head"><span>Opção</span><span>Preço (R$)</span><span>Preço antigo (R$)</span><span></span></div>
+          <div class="v-head"><span>Opção</span><span>Preço normal / cartão (R$)</span><span>Preço no Pix (R$)</span><span>Preço antigo (R$)</span><span></span></div>
           <div id="mVariants"></div>
         </div>
         <button type="button" class="btn btn-outline" id="mAddVariant" style="padding:8px 14px;margin-top:8px">+ Adicionar opção</button>
-        <small style="display:block;margin-top:6px">Ex.: "1 unidade", "Kit com 3", "Kit com 5", cada uma com o seu preço. O "preço antigo" é opcional e mostra o "de/por" com selo de desconto. A primeira opção já vem selecionada na loja.</small>
+        <small style="display:block;margin-top:6px">Ex.: "1 unidade", "Kit com 3", "Kit com 5", cada uma com o seu preço. O "preço no Pix" é opcional: se ficar vazio, usa o desconto Pix das Configurações. O "preço antigo" é opcional e mostra o "de/por" com selo de desconto. A primeira opção já vem selecionada na loja.</small>
       </div>
 
       <div class="field"><label>Fotos</label>
@@ -239,6 +239,7 @@ const Admin = {
         variants[k] = {
           label: $(".v-label", row).value,
           price: $(".v-price", row).value,
+          pix: $(".v-pix", row).value,
           old: $(".v-old", row).value,
         };
       });
@@ -248,6 +249,7 @@ const Admin = {
         <div class="v-row">
           <input class="input v-label" placeholder="ex.: Kit com 3" maxlength="60" value="${esc(v.label)}" aria-label="Nome da opção ${k + 1}">
           <input class="input v-price" type="number" step="0.01" min="0" placeholder="0,00" value="${esc(v.price)}" aria-label="Preço da opção ${k + 1}">
+          <input class="input v-pix" type="number" step="0.01" min="0" placeholder="automático" value="${esc(v.pix)}" aria-label="Preço no Pix da opção ${k + 1}">
           <input class="input v-old" type="number" step="0.01" min="0" placeholder="opcional" value="${esc(v.old)}" aria-label="Preço antigo da opção ${k + 1}">
           <div class="v-acts">
             ${k > 0 ? `<button type="button" class="icon-btn" data-vup="${k}" title="Subir">↑</button>` : `<span class="v-first" title="Já vem selecionada na loja">★</span>`}
@@ -305,12 +307,13 @@ const Admin = {
         const clean = [];
         for (const [k, v] of variants.entries()) {
           const label = String(v.label || "").trim();
-          const price = toNum(v.price), old = toNum(v.old);
+          const price = toNum(v.price), old = toNum(v.old), pix = toNum(v.pix);
           if (!label && price == null && old == null) continue; // linha vazia: ignora
           if (!label) { alert(`Dê um nome para a opção ${k + 1}.`); return false; }
           if (price == null || isNaN(price) || price < 0) { alert(`Informe o preço da opção "${label}".`); return false; }
           if (clean.some((c) => c.label.toLowerCase() === label.toLowerCase())) { alert(`A opção "${label}" está repetida.`); return false; }
-          clean.push({ label, price, old_price: old != null && !isNaN(old) ? old : null });
+          if (pix != null && !isNaN(pix) && pix > price) { alert(`Em "${label}" o preço no Pix está maior que o preço normal.`); return false; }
+          clean.push({ label, price, pix: pix != null && !isNaN(pix) ? pix : null, old_price: old != null && !isNaN(old) ? old : null });
         }
         if (!clean.length) { alert("Cadastre pelo menos uma opção com preço."); return false; }
         const noDiscount = clean.filter((v) => v.old_price != null && v.old_price <= v.price).map((v) => v.label);
@@ -355,7 +358,7 @@ const Admin = {
     drawVariants();
     $("#mAddVariant").onclick = () => {
       readVariants();
-      variants.push({ label: "", price: "", old: "" });
+      variants.push({ label: "", price: "", pix: "", old: "" });
       drawVariants();
       $$("#mVariants .v-label").pop()?.focus();
     };
@@ -541,7 +544,7 @@ const Admin = {
   },
 
   async viewMessage(m) {
-    const subject = encodeURIComponent(`Re: sua mensagem para a ${STORE.name}`);
+    const subject = encodeURIComponent(`Re: sua mensagem para o ${STORE.name}`);
     Modal.open({
       title: `Mensagem de ${m.nome}`,
       submitLabel: "Fechar",
@@ -641,7 +644,7 @@ const Admin = {
     const { data: s, error } = await DB.client.from("store_settings").select("*").eq("id", 1).maybeSingle();
     if (error || !s) return showMsg("#storeMsg", "Erro ao carregar configurações" + (error ? `: ${esc(error.message)}` : ". Rode o schema.sql no Supabase."), false);
     const map = { sName: "name", sSlogan: "slogan", sWa: "whatsapp", sWaLabel: "whatsapp_label", sPhone: "phone", sEmail: "email",
-      sInsta: "instagram", sAddr: "address", sFree: "free_shipping", sCoupon: "coupon", sInst: "max_installments" };
+      sInsta: "instagram", sAddr: "address", sFree: "free_shipping", sInst: "max_installments" };
     Object.entries(map).forEach(([id, k]) => $("#" + id).value = s[k] ?? "");
     $("#sPix").value = Math.round(Number(s.pix_discount || 0) * 1000) / 10;
 
@@ -653,7 +656,6 @@ const Admin = {
       row.name = row.name || "LiloPlay";
       row.whatsapp = (row.whatsapp || "").replace(/\D/g, "");
       row.instagram = (row.instagram || "").replace(/^@/, "");
-      row.coupon = row.coupon ? row.coupon.toUpperCase() : null;
       row.free_shipping = toNum(row.free_shipping) ?? 0;
       row.max_installments = parseInt(row.max_installments) || 1;
       row.pix_discount = (toNum($("#sPix").value) || 0) / 100;

@@ -127,7 +127,7 @@
           });
           if (data.session) { location.href = "conta.html"; return; }
           e.target.reset();
-          msg("#registerMsg", `Conta criada! 🎉 Enviamos um link de confirmação para o seu e-mail. Depois de confirmar, é só entrar. Use o cupom <strong>${esc(STORE.coupon)}</strong> na primeira compra.`);
+          msg("#registerMsg", `Conta criada! 🎉 Enviamos um link de confirmação para o seu e-mail. Depois de confirmar, é só entrar.`);
         } catch (err) { msg("#registerMsg", authErrorPt(err), false); }
         busy(e.target, false);
       };

@@ -12,7 +12,7 @@ const STORE = {
   address: "Rua Exemplo, 123 - Cidade/UF",
   instagram: "liloplay",
   freeShipping: 250,
-  coupon: "BEMVINDO5",
+  coupon: null,
   maxInstallments: 3,
   pixDiscount: 0.05,
 };
