@@ -106,10 +106,21 @@ const hasCardFees = () => Array.isArray(STORE.cardFees) && STORE.cardFees.length
 function maxParcelas() {
   return hasCardFees() ? Math.min(STORE.maxInstallments, STORE.cardFees.length) : STORE.maxInstallments;
 }
+/* VALOR NORMAL (azul, à vista no cartão) = Pix + taxa do 1x. Ex.: Pix 45,90 → normal 48,83.
+   PARCELADO (2x, 3x…) = taxa da parcela da InfinitePay aplicada sobre o VALOR NORMAL,
+   igual a digitar o valor normal em "você recebe" no app (ex.: 76,39 → 3x de 29,10). */
+function cardBase(pix) {
+  return arredCima(pix * (1 + (STORE.cardFees[0] || 0)));
+}
+/* Parcelado a partir de um valor normal (de um produto ou do total do carrinho) */
+function parceladoDe(normal, n) {
+  if (n <= 1) return Math.round(normal * 100) / 100;
+  const fee = STORE.cardFees[Math.min(n, STORE.cardFees.length) - 1] || 0;
+  return arredCima(normal * (1 + fee));
+}
 function cardTotal(v, n = 1) {
   if (!hasCardFees()) return v.price;
-  const fee = STORE.cardFees[Math.min(n, STORE.cardFees.length) - 1] || 0;
-  return arredCima(pixOf(v) * (1 + fee));
+  return parceladoDe(cardBase(pixOf(v)), n);
 }
 /* Arredonda para cima no centavo (como a InfinitePay), ignorando “sujeira” de ponto flutuante */
 function arredCima(x) { return Math.ceil(Math.round(x * 1e6) / 1e4) / 100; }
@@ -336,10 +347,15 @@ const Cart = {
   unit(i) { const p = productById(i.id); return p ? variantFor(p, i.variant).price : 0; },
   /* Produtos no Pix */
   pixTotal() { return this.items().reduce((s, i) => { const p = productById(i.id); return s + (p ? pixOf(variantFor(p, i.variant)) : 0) * i.qty; }, 0); },
-  /* Produtos no cartão em N parcelas (sem frete) */
+  /* Produtos no cartão: 1x = soma do valor normal de cada produto; 2x/3x = taxa da parcela sobre esse total */
   productsCard(n = 1) {
-    if (hasCardFees()) return cardTotal({ pix: this.pixTotal() }, n);
-    return this.items().reduce((s, i) => { const p = productById(i.id); return s + (p ? cardTotal(variantFor(p, i.variant), n) : 0) * i.qty; }, 0);
+    /* Total normal = soma do valor normal de cada produto; parcelas calculadas sobre esse total */
+    if (hasCardFees()) {
+      const normal = this.items().reduce((s, i) => { const p = productById(i.id); return s + (p ? cardBase(pixOf(variantFor(p, i.variant))) : 0) * i.qty; }, 0);
+      return parceladoDe(normal, n);
+    }
+    const sum = this.items().reduce((s, i) => { const p = productById(i.id); return s + (p ? cardTotal(variantFor(p, i.variant), n) : 0) * i.qty; }, 0);
+    return Math.round(sum * 100) / 100;
   },
   /* Frete grátis acima do valor da loja (olha os produtos no cartão à vista) */
   isFree() { return this.items().length > 0 && this.productsCard(1) >= STORE.freeShipping; },
@@ -361,10 +377,14 @@ const Cart = {
     return this.isFree() && o.id === cheapest.id ? 0 : o.price;
   },
   /* ----- Totais (com frete) ----- */
-  pixFinal() { return this.pixTotal() + this.shipPrice(); },
+  pixFinal() { return Math.round((this.pixTotal() + this.shipPrice()) * 100) / 100; },
   cardTotalN(n) {
-    if (hasCardFees()) return cardTotal({ pix: this.pixFinal() }, n);
-    return this.productsCard(n) + this.shipPrice();
+    if (hasCardFees()) {
+      const ship = this.shipPrice();
+      const normal = this.productsCard(1) + (ship ? cardBase(ship) : 0);   // total normal (produtos + frete)
+      return parceladoDe(normal, n);
+    }
+    return Math.round((this.productsCard(n) + this.shipPrice()) * 100) / 100;
   },
   total() { return this.cardTotalN(1); },
 

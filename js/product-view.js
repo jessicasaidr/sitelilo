@@ -13,6 +13,9 @@ function renderProductView(el, p, { compact = false } = {}) {
   const cat = catById(p.cat) || { id: "", name: "Produtos" };
   const variants = productVariants(p);   // [{label, price, old}]
   const custom = p.personalizable || p.cat === "personalizados";
+  /* Produtos personalizados só com o nome (sem anexar imagem) */
+  const SO_NOME = ["Nome Personalizado em Relevo - Plaquinhas", "Placa de Nome Personalizada com Guia de Leitura"];
+  const allowImage = custom && !SO_NOME.includes(p.name);
 
   /* Preço da opção escolhida (com "de/por", parcelas e Pix) */
   const priceHTML = (v) => {
@@ -51,7 +54,7 @@ function renderProductView(el, p, { compact = false } = {}) {
       ${custom ? `
       <div class="opt-label">Nome para personalizar (opcional)</div>
       <input class="input" id="customName" maxlength="20" placeholder="Ex.: Maria Clara">
-      ${custom ? `
+      ${allowImage ? `
       <label class="upload">
         <input type="file" hidden accept="image/*" id="uploadFile">
         ${icon("upload", 28)}
