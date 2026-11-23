@@ -83,9 +83,36 @@ function waInfo() {
   return `https://wa.me/${STORE.whatsapp}?text=${encodeURIComponent(msg)}`;
 }
 
-function installments(price) {
-  const n = STORE.maxInstallments;
-  return `${n}x de ${brl(price / n)} sem juros`;
+/* ---------- Cartão com as taxas da InfinitePay repassadas ao cliente ----------
+   STORE.cardFees = [acréscimo 1x, 2x, 3x…] em fração (ex.: 0.14282 = 14,282%),
+   igual ao simulador do app: "cliente paga" = valor no Pix × (1 + acréscimo),
+   com o total e cada parcela arredondados para cima no centavo (ex.: 75,31 ÷ 3 = 25,11).
+   Sem acréscimos cadastrados, vale o preço normal da opção e o parcelamento "sem juros". */
+const hasCardFees = () => Array.isArray(STORE.cardFees) && STORE.cardFees.length > 0;
+function maxParcelas() {
+  return hasCardFees() ? Math.min(STORE.maxInstallments, STORE.cardFees.length) : STORE.maxInstallments;
+}
+function cardTotal(v, n = 1) {
+  if (!hasCardFees()) return v.price;
+  const fee = STORE.cardFees[Math.min(n, STORE.cardFees.length) - 1] || 0;
+  return arredCima(pixOf(v) * (1 + fee));
+}
+/* Arredonda para cima no centavo (como a InfinitePay), ignorando “sujeira” de ponto flutuante */
+function arredCima(x) { return Math.ceil(Math.round(x * 1e6) / 1e4) / 100; }
+/* Valor de cada parcela */
+const parcela = (total, n) => arredCima(total / n);
+/* Linha de parcelas (cards e página do produto) */
+function installments(v) {
+  const n = maxParcelas();
+  if (n <= 1) return "à vista no cartão";
+  return `até ${n}x de ${brl(parcela(cardTotal(v, n), n))}${hasCardFees() ? "" : " sem juros"}`;
+}
+/* Tabela "1x / 2x / 3x" (página do produto e mensagem do WhatsApp) */
+function parcelasList(totalFor) {
+  return [...Array(maxParcelas())].map((_, k) => {
+    const n = k + 1, total = totalFor(n);
+    return { n, total, each: parcela(total, n) };
+  });
 }
 
 /* ---------- Opções com preço (ex.: 1 unidade / Kit com 3 / Kit com 5) ---------- */
@@ -123,7 +150,7 @@ function productCard(p) {
     <h3>${esc(p.name)}</h3>
     ${multi ? `<div class="from">a partir de</div>` : ""}
     <div class="price">${brl(v.price)}${off ? `<s>${brl(v.old)}</s>` : ""}</div>
-    <div class="installments">${installments(v.price)}</div>
+    <div class="installments">${installments(v)}</div>
     <div class="pix">${brl(pixOf(v))} no Pix</div>
   </a>`;
 }
@@ -264,8 +291,14 @@ const Cart = {
   },
   /* Preço unitário do item, de acordo com a opção (kit) escolhida */
   unit(i) { const p = productById(i.id); return p ? variantFor(p, i.variant).price : 0; },
-  total() { return this.items().reduce((s, i) => s + this.unit(i) * i.qty, 0); },
+  total() { return hasCardFees() ? this.cardTotalN(1) : this.items().reduce((s, i) => s + this.unit(i) * i.qty, 0); },
   /* Total no Pix (soma o valor Pix de cada opção) */
+  /* Total no cartão em N parcelas (soma o valor de cada item em Nx) */
+  cardTotalN(n) {
+    /* com acréscimos da InfinitePay: aplica sobre o total do Pix (como o link de pagamento) */
+    if (hasCardFees()) return cardTotal({ pix: this.pixTotal() }, n);
+    return this.items().reduce((s, i) => { const p = productById(i.id); return s + (p ? cardTotal(variantFor(p, i.variant), n) : 0) * i.qty; }, 0);
+  },
   pixTotal() { return this.items().reduce((s, i) => { const p = productById(i.id); return s + (p ? pixOf(variantFor(p, i.variant)) : 0) * i.qty; }, 0); },
   open() { $("#drawer").classList.add("show"); $("#overlay").classList.add("show"); },
   close() { $("#drawer").classList.remove("show"); $("#overlay").classList.remove("show"); },
@@ -300,7 +333,8 @@ const Cart = {
       "",
       `Subtotal: ${brl(total)}`,
       `Frete: ${free ? "GRÁTIS" : "a combinar"}${cep ? ` (CEP ${cep})` : ""}`,
-      `Total: ${brl(total)}${free ? "" : " + frete"}`,
+      `Total no cartão: ${brl(total)}${free ? "" : " + frete"}`,
+      ...(maxParcelas() > 1 ? [`Parcelas: ${parcelasList((n) => this.cardTotalN(n)).map((x) => x.n === 1 ? `1x ${brl(x.total)}` : `${x.n}x de ${brl(x.each)}`).join(" | ")}`] : []),
       `No Pix: ${brl(this.pixTotal())}${free ? "" : " + frete"}`,
       "",
       "Aguardo as informações para pagamento e entrega.",
@@ -372,7 +406,8 @@ const Cart = {
       <div class="row light"><span>Subtotal (sem frete):</span><span>${brl(total)}</span></div>
       <div class="row light"><span>Frete:</span><span>${shipText}</span></div>
       <div class="row big"><span>Total:</span><span>${brl(total)}</span></div>
-      <div class="pix" style="text-align:right;margin-top:-6px">ou ${brl(this.pixTotal())} no Pix</div>
+      ${maxParcelas() > 1 ? `<div class="installments" style="text-align:right;margin-top:-6px">${(() => { const n = maxParcelas(), t = this.cardTotalN(n); return `ou até ${n}x de ${brl(parcela(t, n))}${hasCardFees() ? "" : " sem juros"}`; })()}</div>` : ""}
+      <div class="pix" style="text-align:right;margin-top:2px">ou ${brl(this.pixTotal())} no Pix</div>
       <button class="btn btn-primary btn-block btn-lg" type="button" id="checkout">Iniciar compra</button>
       <small class="checkout-note">${icon("wa", 14)} Você será direcionado ao WhatsApp para concluir o pedido.</small>
       <a href="produtos.html" class="see-more" id="keepShopping">Ver mais produtos</a>`;

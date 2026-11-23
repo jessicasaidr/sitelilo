@@ -59,8 +59,23 @@ const DB = {
         coupon: s.coupon || STORE.coupon,
         maxInstallments: Number(s.max_installments || STORE.maxInstallments),
         pixDiscount: Number(s.pix_discount ?? STORE.pixDiscount),
+        /* taxas do cartão por parcela, cadastradas em % no painel (ex.: {4.2, 6.1, 7.5}) */
+        cardFees: Array.isArray(s.card_fees) && s.card_fees.length && s.card_fees.every((x) => x != null && !isNaN(x))
+          ? s.card_fees.map((x) => Number(x) / 100) : null,
       });
     }
+    DB.applyCardFees();
+  },
+
+  /* Com taxas de cartão cadastradas, o preço "normal" (azul) de cada opção passa a ser
+     o valor no cartão à vista (Pix ÷ (1 − taxa 1x)). O Pix continua o cadastrado. */
+  applyCardFees() {
+    if (!hasCardFees()) return;
+    PRODUCTS.forEach((p) => {
+      if (!p.variants || !p.variants.length) return;
+      p.variants.forEach((v) => { v.pix = pixOf(v); v.price = cardTotal(v, 1); v.old = null; });
+      p.price = Math.min(...p.variants.map((v) => v.price));
+    });
   },
 
   mapCategory(r) {

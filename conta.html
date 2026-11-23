@@ -199,7 +199,10 @@
               <h3>Vendas</h3>
               <div class="form-grid">
                 <div class="field"><label for="sFree">Frete grátis acima de (R$)</label><input id="sFree" type="number" step="0.01" min="0"></div>
-                <div class="field"><label for="sInst">Parcelas sem juros</label><input id="sInst" type="number" min="1" max="12"></div>
+                <div class="field"><label for="sInst">Máximo de parcelas no cartão</label><input id="sInst" type="number" min="1" max="12"></div>
+                <div class="field full"><label>Cartão com as taxas da InfinitePay (cliente paga)</label>
+                  <div class="fees" id="sFees"></div>
+                  <small>No app da InfinitePay, simule uma venda de <strong>R$ 1.000,00</strong> repassando as taxas ao cliente e copie o valor que o <strong>cliente paga</strong> em cada parcela (ex.: 3x → 1142,73). O site aplica isso sobre o valor no Pix de todos os produtos. Deixe tudo vazio para não repassar taxas.</small></div>
                 <div class="field"><label for="sPix">Desconto no Pix (%)</label><input id="sPix" type="number" step="0.1" min="0" max="100"></div>
               </div>
             </div>

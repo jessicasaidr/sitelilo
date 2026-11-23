@@ -321,6 +321,14 @@ h1, h2, h3, h4 { font-family: var(--font-title); font-weight: 600; line-height: 
 .p-info .price { font-size: 2rem; }
 .opt-label { font-weight: 700; font-size: .9rem; margin: 18px 0 8px; }
 .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.parcelas { margin-top: 10px; font-size: .86rem; color: var(--ink-soft); }
+.parcelas summary { cursor: pointer; color: var(--indigo); font-weight: 700; width: max-content; }
+.parcelas ul { list-style: none; margin: 8px 0 6px; padding: 8px 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); max-width: 340px; }
+.parcelas li { display: flex; justify-content: space-between; gap: 16px; padding: 4px 0; }
+.parcelas li + li { border-top: 1px dashed var(--line); }
+.parcelas li span:first-child { color: var(--ink); font-weight: 700; }
+.parcelas .pix-row span { color: var(--green-t) !important; font-weight: 800; }
+.parcelas small { display: block; font-size: .76rem; }
 .colors-note { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-soft); font-size: .86rem; font-weight: 600; }
 .colors-note svg { width: 14px; height: 14px; opacity: .6; }
 .desc-link { color: var(--indigo); font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }

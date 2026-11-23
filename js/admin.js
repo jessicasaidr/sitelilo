@@ -648,6 +648,20 @@ const Admin = {
     Object.entries(map).forEach(([id, k]) => $("#" + id).value = s[k] ?? "");
     $("#sPix").value = Math.round(Number(s.pix_discount || 0) * 1000) / 10;
 
+    /* Cartão: para cada parcela, o "cliente paga" do simulador da InfinitePay numa venda de R$ 1.000,00.
+       No banco fica o acréscimo em % (ex.: 1.142,82 → 14,282%). */
+    const fees = Array.isArray(s.card_fees)
+      ? s.card_fees.map((x) => (x == null ? "" : (Math.round(1000 * (1 + Number(x) / 100) * 100) / 100).toFixed(2))) : [];
+    const drawFees = () => {
+      $$("#sFees input").forEach((inp, k) => { fees[k] = inp.value; });
+      const n = Math.max(1, Math.min(12, parseInt($("#sInst").value) || 1));
+      $("#sFees").innerHTML = [...Array(n)].map((_, k) => `
+        <label class="fee"><span>${k + 1}x</span><input type="number" step="0.01" min="1000" max="1500" placeholder="ex.: 1142,73"
+          value="${esc(fees[k] ?? "")}" aria-label="Cliente paga em ${k + 1}x numa venda de R$ 1.000"></label>`).join("");
+    };
+    drawFees();
+    $("#sInst").oninput = drawFees;
+
     $("#storeForm").onsubmit = async (e) => {
       e.preventDefault();
       setBusy(e.target, true);
@@ -659,6 +673,13 @@ const Admin = {
       row.free_shipping = toNum(row.free_shipping) ?? 0;
       row.max_installments = parseInt(row.max_installments) || 1;
       row.pix_discount = (toNum($("#sPix").value) || 0) / 100;
+      /* Cartão: todas as parcelas preenchidas ou todas vazias (sem repasse) */
+      const feeVals = $$("#sFees input").map((inp) => toNum(inp.value));
+      if (feeVals.every((x) => x == null)) row.card_fees = null;
+      else if (feeVals.some((x) => x == null || isNaN(x) || x < 1000 || x > 1500)) {
+        setBusy(e.target, false);
+        return showMsg("#storeMsg", "Preencha o valor de todas as parcelas (entre 1000 e 1500, simulando uma venda de R$ 1.000,00) ou deixe todas vazias.", false);
+      } else row.card_fees = feeVals.map((x) => Math.round((x - 1000) / 10 * 10000) / 10000);  // % de acréscimo
       row.updated_at = new Date().toISOString();
       const { error: err } = await DB.client.from("store_settings").update(row).eq("id", 1);
       setBusy(e.target, false);

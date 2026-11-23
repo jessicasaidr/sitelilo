@@ -124,3 +124,9 @@ button.pill { cursor: pointer; }
   .dl dd { margin-bottom: 8px; }
   .table .hide-m { display: none; }
 }
+
+/* Taxas do cartão por parcela (Configurações) */
+.fees { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+.fees .fee { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 12px; padding: 4px 4px 4px 10px; background: #fff; }
+.fees .fee span { font-weight: 800; color: var(--indigo); font-size: .85rem; }
+.fees .fee input { width: 84px; border: 0; padding: 6px; outline: none; background: transparent; }

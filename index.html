@@ -204,7 +204,7 @@
       /* Benefícios */
       $("#benefits").innerHTML = [
         ["truck", "Frete Grátis", `em pedidos acima de ${brl(STORE.freeShipping)}`],
-        ["card", `Até ${STORE.maxInstallments}x sem juros`, "no cartão de crédito"],
+        ["card", `Até ${maxParcelas()}x no cartão`, hasCardFees() ? "de crédito, finalizando pelo WhatsApp" : "sem juros no cartão de crédito"],
       ].map(([i, t, s]) => `<div class="benefit"><span class="ic">${icon(i)}</span><strong>${t}</strong><small>${s}</small></div>`).join("");
 
       /* Projeto personalizado: abre o WhatsApp com a mensagem pronta */

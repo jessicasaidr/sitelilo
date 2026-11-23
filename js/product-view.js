@@ -18,7 +18,16 @@ function renderProductView(el, p, { compact = false } = {}) {
   const priceHTML = (v) => {
     const off = v.old && v.old > v.price ? Math.round((1 - v.price / v.old) * 100) : 0;
     return `<div class="price">${brl(v.price)}${off ? `<s>${brl(v.old)}</s> <span class="tag-off" style="position:static;vertical-align:middle">-${off}%</span>` : ""}</div>
-      <div class="installments" style="margin-top:4px">${installments(v.price)} · <span class="pix">${brl(pixOf(v))} no Pix</span></div>`;
+      <div class="installments" style="margin-top:4px">${installments(v)} · <span class="pix">${brl(pixOf(v))} no Pix</span></div>
+      ${maxParcelas() > 1 ? `
+      <details class="parcelas">
+        <summary>Ver parcelas no cartão</summary>
+        <ul>${parcelasList((n) => cardTotal(v, n)).map((x) =>
+          `<li><span>${x.n}x de ${brl(x.each)}</span><span>${x.n > 1 ? `total ${brl(x.total)}` : "à vista"}</span></li>`).join("")}
+          <li class="pix-row"><span>Pix</span><span>${brl(pixOf(v))}</span></li>
+        </ul>
+        <small>${hasCardFees() ? "Valores no cartão já incluem as taxas da operadora. " : ""}Pagamento combinado pelo WhatsApp ao finalizar o pedido.</small>
+      </details>` : ""}`;
   };
 
   el.innerHTML = `
