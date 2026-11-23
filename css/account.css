@@ -77,7 +77,7 @@ button.pill { cursor: pointer; }
 
 /* Opções e preços do produto */
 .variants { background: #fff; border-radius: var(--radius); padding: 12px; box-shadow: var(--shadow); }
-.v-head, .v-row { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 84px; gap: 8px; align-items: center; }
+.v-head, .v-row { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr 84px; gap: 8px; align-items: center; }
 .v-head { font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); padding: 0 2px 8px; }
 .v-row + .v-row { margin-top: 8px; }
 .v-row .input { padding: 9px 11px; }
@@ -130,3 +130,40 @@ button.pill { cursor: pointer; }
 .fees .fee { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 12px; padding: 4px 4px 4px 10px; background: #fff; }
 .fees .fee span { font-weight: 800; color: var(--indigo); font-size: .85rem; }
 .fees .fee input { width: 84px; border: 0; padding: 6px; outline: none; background: transparent; }
+
+/* Embalagens (Configurações > Envio) */
+.boxes { display: grid; gap: 8px; margin-bottom: 6px; }
+.box-row { display: grid; grid-template-columns: 1.6fr repeat(4, 1fr); gap: 8px; align-items: center; }
+.box-row .input { padding: 9px 11px; }
+.box-head { font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); }
+@media (max-width: 720px) {
+  .box-head { display: none; }
+  .box-row { grid-template-columns: repeat(4, 1fr); padding-bottom: 8px; border-bottom: 1px dashed var(--line); }
+  .box-row .bx-name { grid-column: 1 / -1; }
+}
+
+/* ---------- Pedidos (cliente e admin) ---------- */
+.order-card { background: #fff; border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); margin-bottom: 12px; }
+.order-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.order-head > div { display: grid; gap: 2px; }
+.order-head small { color: var(--ink-soft); font-size: .8rem; }
+.order-head small a { color: var(--indigo); font-weight: 700; }
+.order-card .status { padding: 4px 10px; border-radius: 99px; font-size: .74rem; font-weight: 800; white-space: nowrap; }
+.order-items { list-style: none; padding: 10px 0; margin: 10px 0; border-top: 1px dashed var(--line); border-bottom: 1px dashed var(--line); display: grid; gap: 6px; }
+.order-items li { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: .9rem; }
+.order-items small { color: var(--ink-soft); }
+.order-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: .9rem; }
+.order-note { display: block; margin-top: 8px; color: var(--ink-soft); font-size: .78rem; }
+.rate-link { flex: 0 0 auto; padding: 5px 12px; border-radius: 99px; background: #fff7e6; color: #b7791f; font-weight: 800; font-size: .78rem; text-decoration: none; }
+.rate-link.done { background: var(--green-1); color: #047857; }
+.status-select { border-radius: 99px; padding: 6px 12px; border: 1px solid var(--line); font-weight: 800; font-size: .8rem; cursor: pointer; }
+.status-select.st-pendente   { background: var(--yellow-1); color: #92400e; }
+.status-select.st-confirmado { background: var(--blue-1);   color: #1d4ed8; }
+.status-select.st-enviado    { background: var(--purple-1); color: #7e22ce; }
+.status-select.st-entregue   { background: var(--green-1);  color: #047857; }
+.status-select.st-cancelado  { background: var(--rose-1);   color: #be123c; }
+.empty-box { text-align: center; padding: 40px 10px; display: grid; justify-items: center; gap: 8px; color: var(--ink-soft); }
+
+/* Aviso discreto no login quando o cliente vem do carrinho */
+.buy-notice { display: none; margin: -6px 0 18px; color: var(--ink-soft); font-size: .92rem; }
+.buy-notice.show { display: block; }

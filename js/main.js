@@ -28,6 +28,7 @@ const ICONS = {
   truck:  '<path d="M2 6h12v10H2zM14 9h4l4 4v3h-8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="6" cy="18" r="2" fill="currentColor"/><circle cx="18" cy="18" r="2" fill="currentColor"/>',
   card:   '<rect x="2" y="5" width="20" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 10h20" stroke="currentColor" stroke-width="2"/>',
   chat:   '<path d="M4 4h16v12H8l-4 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
+  clock:  '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
   ticket: '<path d="M3 7h18v3a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 7v10" stroke="currentColor" stroke-width="2" stroke-dasharray="2 2"/>',
   shield: '<path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8.5 12l2.5 2.5 4.5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
   swap:   '<path d="M4 9h14l-4-4M20 15H6l4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -75,6 +76,19 @@ function descHTML(text, opcao) {
     h = h.replace(/Plataforma LiloPlay/g, `<a href="${ig}" target="_blank" rel="noopener" class="desc-link">Plataforma LiloPlay</a>`);
     return `<p>${h}</p>`;
   }).join("");
+}
+
+/* Prazo de produção (Configurações > Envio) — aparece em cada produto, separado do frete */
+function producaoTxt() {
+  const a = STORE.productionMin ?? 7, b = STORE.productionMax ?? 12;
+  return a === b ? `${a} dias úteis` : `${a} a ${b} dias úteis`;
+}
+
+/* Estrelinha + média nos cards e na página do produto (ex.: ★ 4,8 (12)) */
+function ratingMini(p, long = false) {
+  const r = p.rating; if (!r || !r.total) return "";
+  const avg = Number(r.avg).toFixed(1).replace(".", ",");
+  return `<span class="rating-mini"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4L2.8 9.5l6.4-.8z" fill="currentColor"/></svg>${avg} <small>(${r.total}${long ? (r.total === 1 ? " avaliação" : " avaliações") : ""})</small></span>`;
 }
 
 /* Link do WhatsApp com mensagem pronta pedindo mais informações (rodapé e botão flutuante) */
@@ -148,6 +162,7 @@ function productCard(p) {
       ${placeholder(p)}
     </div>
     <h3>${esc(p.name)}</h3>
+    ${ratingMini(p)}
     ${multi ? `<div class="from">a partir de</div>` : ""}
     <div class="price">${brl(v.price)}${off ? `<s>${brl(v.old)}</s>` : ""}</div>
     <div class="installments">${installments(v)}</div>
@@ -248,7 +263,7 @@ function renderFooter() {
     <div class="container footer-bottom">
       <div>
         <div style="margin-bottom:6px">Meios de pagamento</div>
-        <div class="pay"><span>PIX</span><span>VISA</span><span>MASTER</span><span>ELO</span><span>BOLETO</span></div>
+        <div class="pay"><span>PIX</span><span>VISA</span><span>MASTER</span><span>ELO</span></div>
       </div>
       <div style="align-self:end">© ${new Date().getFullYear()} ${STORE.name}. Todos os direitos reservados.</div>
     </div>
@@ -270,6 +285,34 @@ function renderFooter() {
   $("#cookieOk").addEventListener("click", () => { store.set("lilo_cookie", true); $("#cookie").classList.remove("show"); });
 }
 
+/* ---------- Frete (Melhor Envio, pela função "frete" do Supabase) ---------- */
+const Frete = {
+  fmtCep(v) { v = String(v || "").replace(/\D/g, "").slice(0, 8); return v.length > 5 ? v.slice(0, 5) + "-" + v.slice(5) : v; },
+  valid(v) { return String(v || "").replace(/\D/g, "").length === 8; },
+  /* CEP salvo (ou o do cadastro do cliente) */
+  cep() { return store.get("lilo_cep", "") || (window.DB && DB.profile && DB.profile.cep) || ""; },
+  /* Cotação: devolve { options:[{id,name,company,price,days_min,days_max}], production:{min,max} } */
+  async quote(cep, items) {
+    if (!(window.DB && DB.enabled)) throw new Error("Frete indisponível no momento. Combinamos pelo WhatsApp.");
+    const { data, error } = await DB.client.functions.invoke("frete", {
+      body: { cep: String(cep).replace(/\D/g, ""), items: items.map((i) => ({ id: i.id, variant: i.variant || "", qty: i.qty })) },
+    });
+    if (error) {
+      let msg = "Não foi possível calcular o frete agora. Combinamos pelo WhatsApp.";
+      try { const b = await error.context.json(); if (b && b.error) msg = b.error; } catch {}
+      throw new Error(msg);
+    }
+    if (!data || !Array.isArray(data.options)) throw new Error("Não foi possível calcular o frete agora. Combinamos pelo WhatsApp.");
+    return data;
+  },
+  /* Prazo da transportadora (o prazo de produção aparece separado, em cada produto) */
+  prazo(o) {
+    const a = o.days_min || 0, b = o.days_max || o.days_min || 0;
+    return a === b ? `${a} ${a === 1 ? "dia útil" : "dias úteis"}` : `${a} a ${b} dias úteis`;
+  },
+  label(o) { return o.company && !o.name.toLowerCase().includes(o.company.toLowerCase()) ? `${o.name} (${o.company})` : o.name; },
+};
+
 /* ---------- Carrinho ---------- */
 const Cart = {
   items() { return store.get("lilo_cart", []); },
@@ -289,65 +332,107 @@ const Cart = {
     items[idx].qty = Math.max(1, Math.min(999, qty || 1));
     this.save(items);
   },
-  /* Preço unitário do item, de acordo com a opção (kit) escolhida */
+  /* Preço unitário do item, de acordo com a opção escolhida */
   unit(i) { const p = productById(i.id); return p ? variantFor(p, i.variant).price : 0; },
-  total() { return hasCardFees() ? this.cardTotalN(1) : this.items().reduce((s, i) => s + this.unit(i) * i.qty, 0); },
-  /* Total no Pix (soma o valor Pix de cada opção) */
-  /* Total no cartão em N parcelas (soma o valor de cada item em Nx) */
-  cardTotalN(n) {
-    /* com acréscimos da InfinitePay: aplica sobre o total do Pix (como o link de pagamento) */
+  /* Produtos no Pix */
+  pixTotal() { return this.items().reduce((s, i) => { const p = productById(i.id); return s + (p ? pixOf(variantFor(p, i.variant)) : 0) * i.qty; }, 0); },
+  /* Produtos no cartão em N parcelas (sem frete) */
+  productsCard(n = 1) {
     if (hasCardFees()) return cardTotal({ pix: this.pixTotal() }, n);
     return this.items().reduce((s, i) => { const p = productById(i.id); return s + (p ? cardTotal(variantFor(p, i.variant), n) : 0) * i.qty; }, 0);
   },
-  pixTotal() { return this.items().reduce((s, i) => { const p = productById(i.id); return s + (p ? pixOf(variantFor(p, i.variant)) : 0) * i.qty; }, 0); },
+  /* Frete grátis acima do valor da loja (olha os produtos no cartão à vista) */
+  isFree() { return this.items().length > 0 && this.productsCard(1) >= STORE.freeShipping; },
+
+  /* ----- Frete escolhido ----- */
+  key() { return JSON.stringify(this.items().map((i) => [i.id, i.variant || "", i.qty])); },
+  ship() {
+    return null;   // o cálculo do frete fica só na página do produto; no carrinho o frete é combinado no WhatsApp
+  },
+  shipChosen() {
+    const s = this.ship(); if (!s) return null;
+    return s.options.find((o) => o.id === s.chosen) || s.options[0] || null;
+  },
+  /* Valor do frete escolhido (grátis na opção mais barata quando passa do valor) */
+  shipPrice() {
+    const o = this.shipChosen(); if (!o) return 0;
+    const s = this.ship();
+    const cheapest = s.options.reduce((a, b) => (b.price < a.price ? b : a), s.options[0]);
+    return this.isFree() && o.id === cheapest.id ? 0 : o.price;
+  },
+  /* ----- Totais (com frete) ----- */
+  pixFinal() { return this.pixTotal() + this.shipPrice(); },
+  cardTotalN(n) {
+    if (hasCardFees()) return cardTotal({ pix: this.pixFinal() }, n);
+    return this.productsCard(n) + this.shipPrice();
+  },
+  total() { return this.cardTotalN(1); },
+
   open() { $("#drawer").classList.add("show"); $("#overlay").classList.add("show"); },
   close() { $("#drawer").classList.remove("show"); $("#overlay").classList.remove("show"); },
-  cep() { return store.get("lilo_cep", ""); },
 
   /* Monta a mensagem do pedido e abre o WhatsApp */
-  checkout() {
+  async checkout() {
     const items = this.items().filter((i) => productById(i.id));
     if (!items.length) return;
-    const total = this.total();
-    const free = total >= STORE.freeShipping;
+    /* Só finaliza com cadastro: sem login, vai para Entrar/Cadastrar e depois volta com o carrinho aberto */
+    if (!(window.DB && DB.user)) {
+      store.set("lilo_return", location.pathname.split("/").pop() + location.search);
+      location.href = "login.html?compra=1";
+      return;
+    }
+    const s = this.ship(), o = this.shipChosen(), ship = this.shipPrice();
     const lines = items.map((i, n) => {
       const p = productById(i.id);
       return `${n + 1}. ${p.name}\n   Qtd: ${i.qty} x ${brl(this.unit(i))} = ${brl(this.unit(i) * i.qty)}${i.opts ? `\n   Detalhes: ${i.opts}` : ""}`;
     });
-    const cep = this.cep();
-    /* Se o cliente estiver logado, já envia os dados dele */
-    const pr = window.DB && DB.user ? (DB.profile || {}) : null;
-    const client = pr ? [
-      "",
+    /* Dados do cliente (cadastro obrigatório para finalizar) */
+    const pr = DB.profile || {};
+    const client = [
       "*Meus dados:*",
       `Nome: ${pr.nome || "-"}`,
       `E-mail: ${pr.email || DB.user.email}`,
       pr.telefone ? `Telefone: ${pr.telefone}` : "",
       pr.rua ? `Endereço: ${pr.rua}, ${pr.numero || "s/n"}${pr.complemento ? " - " + pr.complemento : ""} - ${pr.bairro || ""} - ${pr.cidade || ""}/${pr.estado || ""} - CEP ${pr.cep || ""}` : "",
-    ].filter((l) => l !== "") : [];
+    ].filter(Boolean);
+    const freteLine = o
+      ? `Frete: ${Frete.label(o)} - ${ship === 0 ? "GRÁTIS" : brl(ship)} - entrega em ${Frete.prazo(o)} após o envio (CEP ${s.cep})`
+      : `Frete: ${this.isFree() ? "GRÁTIS" : "a combinar"}`;
+    /* Abre a aba já (evita bloqueio de pop-up) e registra o pedido para o painel e as avaliações */
+    const win = window.open("about:blank", "_blank");
+    let orderId = null;
+    try {
+      const { data, error } = await DB.client.from("orders").insert({
+        items: items.map((i) => { const p = productById(i.id); return { id: Number(p.id), name: p.name, variant: i.variant || "", opts: i.opts || "", qty: i.qty, price: this.unit(i) }; }),
+        total: Math.round(this.total() * 100) / 100,
+        pix_total: Math.round(this.pixFinal() * 100) / 100,
+      }).select("id").single();
+      if (!error && data) orderId = data.id;
+    } catch {}
     const msg = [
-      `Olá! Gostaria de finalizar meu pedido no ${STORE.name}:`,
-      ...(client.length ? ["", ...client] : []),
+      `Olá! Gostaria de finalizar meu pedido${orderId ? ` nº ${orderId}` : ""} no ${STORE.name}:`,
+      "", ...client,
+      "", ...lines,
       "",
-      ...lines,
-      "",
-      `Subtotal: ${brl(total)}`,
-      `Frete: ${free ? "GRÁTIS" : "a combinar"}${cep ? ` (CEP ${cep})` : ""}`,
-      `Total no cartão: ${brl(total)}${free ? "" : " + frete"}`,
+      `Produtos: ${brl(this.productsCard(1))}`,
+      freteLine,
+      `Total no cartão: ${brl(this.total())}${o || this.isFree() ? "" : " + frete"}`,
       ...(maxParcelas() > 1 ? [`Parcelas: ${parcelasList((n) => this.cardTotalN(n)).map((x) => x.n === 1 ? `1x ${brl(x.total)}` : `${x.n}x de ${brl(x.each)}`).join(" | ")}`] : []),
-      `No Pix: ${brl(this.pixTotal())}${free ? "" : " + frete"}`,
+      `No Pix: ${brl(this.pixFinal())}${o || this.isFree() ? "" : " + frete"}`,
       "",
+      `Prazo de produção: ${producaoTxt()}`,
+      "(Peso e frete serão confirmados por aqui.)",
       "Aguardo as informações para pagamento e entrega.",
     ].join("\n");
     const url = `https://wa.me/${STORE.whatsapp}?text=${encodeURIComponent(msg)}`;
-    const win = window.open(url, "_blank", "noopener");
-    if (!win) location.href = url;
+    if (win) { try { win.opener = null; } catch {} win.location.href = url; } else location.href = url;
+    /* Pedido registrado: esvazia o carrinho */
+    if (orderId) { this.save([]); this.close(); toast(`Pedido nº ${orderId} enviado! Acompanhe em Minha conta ♡`); }
   },
 
   render() {
     const items = this.items();
     const total = this.total();
-    const free = total >= STORE.freeShipping;
     $("#cartCount").textContent = items.reduce((s, i) => s + i.qty, 0);
     $("#cartTotal").textContent = brl(total);
     const body = $("#cartItems");
@@ -370,7 +455,7 @@ const Cart = {
         <a class="thumb" href="produto.html?id=${p.id}">${placeholder(p)}</a>
         <div class="ci-info">
           <div class="ci-top">
-            <h4>${esc(p.name)}${i.opts ? `<small>${esc(i.opts)}</small>` : ""}</h4>
+            <h4>${esc(p.name)}${i.opts ? `<small>${esc(i.opts)}</small>` : ""}<small class="ci-prod">${icon("clock", 12)} Produção: ${producaoTxt()}</small></h4>
             <button class="rm" data-rm="${idx}" type="button">Remover</button>
           </div>
           <div class="ci-bottom">
@@ -385,31 +470,22 @@ const Cart = {
       </div>`;
     }).join("");
 
-    const missing = Math.max(0, STORE.freeShipping - total);
-    const pct = Math.min(100, (total / STORE.freeShipping) * 100);
-    const cep = this.cep();
-    const shipText = free ? `<span style="color:var(--green-t);font-weight:800">Grátis</span>`
-      : cep ? "A combinar no WhatsApp" : `<span class="muted">Calcule para ver</span>`;
+    const prods = this.productsCard(1);
+    const free = this.isFree();
+    const o = this.shipChosen();
+    const shipText = o ? (this.shipPrice() === 0 ? `<span style="color:var(--green-t);font-weight:800">Grátis</span>` : brl(this.shipPrice()))
+      : free ? `<span style="color:var(--green-t);font-weight:800">Grátis</span>` : "A combinar no WhatsApp";
+    const logged = !!(window.DB && DB.user);
 
     foot.innerHTML = `
-      <div class="cart-ship">
-        <div class="opt-label" style="margin:0 0 8px">Meios de envio</div>
-        <form class="cep-form" id="cartCepForm">
-          <input class="input" id="cartCep" inputmode="numeric" maxlength="9" placeholder="Seu CEP" value="${cep}" aria-label="CEP">
-          <button class="btn btn-outline" type="submit">Calcular</button>
-        </form>
-        <a class="cep-help" href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" rel="noopener">Não sei meu CEP</a>
-        <div class="cep-msg" id="cartCepMsg"></div>
-      </div>
-      <div class="free-ship">${missing > 0 ? `Faltam <strong>${brl(missing)}</strong> para o frete grátis!` : "Você ganhou <strong>frete grátis</strong>! 🎉"}</div>
-      <div class="free-bar"><i style="width:${pct}%"></i></div>
-      <div class="row light"><span>Subtotal (sem frete):</span><span>${brl(total)}</span></div>
+      <div class="row light"><span>Produtos:</span><span>${brl(prods)}</span></div>
       <div class="row light"><span>Frete:</span><span>${shipText}</span></div>
       <div class="row big"><span>Total:</span><span>${brl(total)}</span></div>
-      ${maxParcelas() > 1 ? `<div class="installments" style="text-align:right;margin-top:-6px">${(() => { const n = maxParcelas(), t = this.cardTotalN(n); return `ou até ${n}x de ${brl(parcela(t, n))}${hasCardFees() ? "" : " sem juros"}`; })()}</div>` : ""}
-      <div class="pix" style="text-align:right;margin-top:2px">ou ${brl(this.pixTotal())} no Pix</div>
+      <div class="pay-alt">${maxParcelas() > 1 ? `<span class="installments">${(() => { const n = maxParcelas(), t = this.cardTotalN(n); return `ou até ${n}x de ${brl(parcela(t, n))}${hasCardFees() ? "" : " sem juros"}`; })()}</span>` : ""}<span class="pix">ou ${brl(this.pixFinal())} no Pix</span></div>
       <button class="btn btn-primary btn-block btn-lg" type="button" id="checkout">Iniciar compra</button>
-      <small class="checkout-note">${icon("wa", 14)} Você será direcionado ao WhatsApp para concluir o pedido.</small>
+      <small class="checkout-note">${logged
+        ? `${icon("wa", 14)} Você será direcionado ao WhatsApp para concluir o pedido.`
+        : `${icon("user", 14)} Para concluir a compra é preciso <a href="login.html?compra=1" id="loginToBuy">entrar ou criar sua conta</a>.`}</small>
       <a href="produtos.html" class="see-more" id="keepShopping">Ver mais produtos</a>`;
 
     /* Eventos */
@@ -418,18 +494,8 @@ const Cart = {
     $$("[data-inc]", body).forEach((b) => b.onclick = () => { const k = Number(b.dataset.inc); this.setQty(k, items[k].qty + 1); });
     $$("[data-qty]", body).forEach((inp) => inp.onchange = () => this.setQty(Number(inp.dataset.qty), parseInt(inp.value)));
 
-    const cepIn = $("#cartCep");
-    cepIn.oninput = () => { const v = cepIn.value.replace(/\D/g, "").slice(0, 8); cepIn.value = v.length > 5 ? v.slice(0, 5) + "-" + v.slice(5) : v; };
-    $("#cartCepForm").onsubmit = (e) => {
-      e.preventDefault();
-      if (cepIn.value.replace(/\D/g, "").length !== 8) {
-        $("#cartCepMsg").innerHTML = `<span style="color:var(--rose-t)">Digite um CEP válido.</span>`;
-        return;
-      }
-      store.set("lilo_cep", cepIn.value);
-      this.render();
-      $("#cartCepMsg").innerHTML = free ? "Seu pedido tem frete grátis! 🎉" : "O valor do frete será informado no WhatsApp ao concluir o pedido.";
-    };
+    const lt = $("#loginToBuy");
+    if (lt) lt.onclick = () => store.set("lilo_return", location.pathname.split("/").pop() + location.search);
     $("#checkout").onclick = () => this.checkout();
     $("#keepShopping").onclick = (e) => { if (document.body.dataset.page === "produtos") { e.preventDefault(); this.close(); } };
   },
@@ -502,11 +568,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (window.DB) await DB.init();
   renderHeader();
   renderFooter();
-  Cart.render();
+  /* Um problema no carrinho (ex.: frete salvo com erro) nunca pode impedir a página de carregar */
+  try { Cart.render(); } catch (e) {
+    console.error("Carrinho:", e);
+    store.set("lilo_frete", null);
+    try { Cart.render(); } catch {}
+  }
   $("#openCart").onclick = () => Cart.open();
   $("#closeCart").onclick = () => Cart.close();
   $("#overlay").onclick = () => Cart.close();
   bindForms();
+  /* Voltou do login para finalizar a compra: abre o carrinho */
+  if (store.get("lilo_open_cart", false) && window.DB && DB.user) { store.set("lilo_open_cart", false); Cart.open(); }
   const page = document.body.dataset.page;
   if (window.Pages && Pages[page]) Pages[page]();
 });

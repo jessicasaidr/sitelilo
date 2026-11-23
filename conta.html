@@ -41,8 +41,10 @@
         <nav class="acc-tabs" id="tabs">
           <button class="acc-tab on" data-tab="dados" type="button"></button>
           <button class="acc-tab" data-tab="seguranca" type="button"></button>
+          <button class="acc-tab" data-tab="pedidos" type="button"></button>
           <div id="adminTabs" style="display:none">
             <div class="sep">Administração</div>
+            <button class="acc-tab" data-tab="vendas" type="button"></button>
             <button class="acc-tab" data-tab="produtos" type="button"></button>
             <button class="acc-tab" data-tab="categorias" type="button"></button>
             <button class="acc-tab" data-tab="clientes" type="button"></button>
@@ -145,6 +147,22 @@
           </table></div>
         </div>
 
+        <!-- ========== CLIENTE: MEUS PEDIDOS ========== -->
+        <div class="panel" id="panel-pedidos">
+          <div class="panel-head"><div><h2>Meus pedidos</h2><p>Acompanhe seus pedidos e avalie os produtos depois da confirmação.</p></div></div>
+          <div id="myOrders"><div class="loading">Carregando…</div></div>
+        </div>
+
+        <!-- ========== ADMIN: PEDIDOS ========== -->
+        <div class="panel" id="panel-vendas">
+          <div class="panel-head"><div><h2>Pedidos</h2><p>Pedidos enviados pelo WhatsApp. Confirme o pedido para o cliente poder avaliar os produtos.</p></div></div>
+          <div class="toolbar">
+            <input class="input" id="ordSearch" placeholder="Buscar por nº, cliente ou produto…">
+            <select id="ordFilter"><option value="">Todos</option><option value="pendente">Pendentes</option><option value="confirmado">Confirmados</option><option value="enviado">Enviados</option><option value="entregue">Entregues</option><option value="cancelado">Cancelados</option></select>
+          </div>
+          <div id="ordList"><div class="loading">Carregando…</div></div>
+        </div>
+
         <!-- ========== ADMIN: MENSAGENS DO CONTATO ========== -->
         <div class="panel" id="panel-mensagens">
           <div class="panel-head">
@@ -204,6 +222,18 @@
                   <div class="fees" id="sFees"></div>
                   <small>No app da InfinitePay, simule uma venda de <strong>R$ 1.000,00</strong> repassando as taxas ao cliente e copie o valor que o <strong>cliente paga</strong> em cada parcela (ex.: 3x → 1142,73). O site aplica isso sobre o valor no Pix de todos os produtos. Deixe tudo vazio para não repassar taxas.</small></div>
                 <div class="field"><label for="sPix">Desconto no Pix (%)</label><input id="sPix" type="number" step="0.1" min="0" max="100"></div>
+              </div>
+            </div>
+            <div class="form-section">
+              <h3>Envio (Melhor Envio)</h3>
+              <div class="form-grid g3">
+                <div class="field"><label for="sOrigin">CEP de origem (de onde você envia)</label><input id="sOrigin" inputmode="numeric" maxlength="9"></div>
+                <div class="field"><label for="sProdMin">Produção: mínimo (dias úteis)</label><input id="sProdMin" type="number" min="0" max="90"></div>
+                <div class="field"><label for="sProdMax">Produção: máximo (dias úteis)</label><input id="sProdMax" type="number" min="0" max="90"></div>
+              </div>
+              <div class="field"><label>Embalagens (peso = embalagem + produto, estimado)</label>
+                <div class="boxes" id="sBoxes"><div class="loading">Carregando…</div></div>
+                <small>Medidas em centímetros e peso em kg. Cada produto usa uma dessas embalagens (escolha em Produtos > ✏️). Ao mudar uma embalagem aqui, todos os produtos que a usam passam a usar a medida nova no cálculo do frete.</small>
               </div>
             </div>
             <div class="form-actions"><button class="btn btn-primary" type="submit">Salvar configurações</button></div>

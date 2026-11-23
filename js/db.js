@@ -59,12 +59,28 @@ const DB = {
         coupon: s.coupon || STORE.coupon,
         maxInstallments: Number(s.max_installments || STORE.maxInstallments),
         pixDiscount: Number(s.pix_discount ?? STORE.pixDiscount),
+        productionMin: Number(s.production_days_min ?? STORE.productionMin ?? 7),
+        productionMax: Number(s.production_days_max ?? STORE.productionMax ?? 12),
         /* taxas do cartão por parcela, cadastradas em % no painel (ex.: {4.2, 6.1, 7.5}) */
         cardFees: Array.isArray(s.card_fees) && s.card_fees.length && s.card_fees.every((x) => x != null && !isNaN(x))
           ? s.card_fees.map((x) => Number(x) / 100) : null,
       });
     }
     DB.applyCardFees();
+    await DB.loadRatings();
+  },
+
+  /* Média de estrelas e nº de avaliações de cada produto (view product_ratings) */
+  async loadRatings() {
+    try {
+      const { data, error } = await this.client.from("product_ratings").select("product_id,avg,total");
+      if (error || !data) return;   // SQL 056 ainda não rodado
+      const map = new Map(data.map((r) => [String(r.product_id), r]));
+      PRODUCTS.forEach((p) => {
+        const r = map.get(String(p.id));
+        p.rating = r ? { avg: Number(r.avg), total: Number(r.total) } : null;
+      });
+    } catch {}
   },
 
   /* Com taxas de cartão cadastradas, o preço "normal" (azul) de cada opção passa a ser

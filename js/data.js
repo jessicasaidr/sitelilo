@@ -15,6 +15,8 @@ const STORE = {
   coupon: null,
   maxInstallments: 3,
   pixDiscount: 0.05,
+  productionMin: 7,
+  productionMax: 12,
 };
 
 /* Cores pastel disponíveis: blue, green, purple, indigo, magenta, orange, rose, cyan, yellow

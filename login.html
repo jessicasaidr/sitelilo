@@ -25,6 +25,8 @@
     <div class="breadcrumb"><a href="index.html">Início</a> › Minha Conta › <span id="crumb">Login</span></div>
     <h1 class="page-title" id="title">Iniciar sessão</h1>
 
+    <p class="buy-notice" id="buyNotice">Entre ou crie sua conta para finalizar. Seu carrinho fica salvo ♡</p>
+
     <div class="form-msg form-warn" id="notConfigured">
       O login ainda não está ativo: falta configurar o Supabase em <strong>js/supabase-config.js</strong>.
     </div>
@@ -69,8 +71,18 @@
   <script src="js/main.js"></script>
   <script>
     Pages.login = () => {
-      /* Já logado? vai direto para a conta */
-      if (DB.user) { location.replace("conta.html"); return; }
+      /* Veio do carrinho? Depois de entrar, volta para a página com o carrinho aberto */
+      const compra = qs("compra") === "1";
+      const destino = () => {
+        if (!compra) return "conta.html";
+        store.set("lilo_open_cart", true);
+        const back = store.get("lilo_return", "index.html");
+        return /^[\w.-]+\.html(\?[^#]*)?$/.test(back) && !back.startsWith("login") ? back : "index.html";
+      };
+      if (compra) { $("#buyNotice").classList.add("show"); $("#title").textContent = "Finalizar compra"; }
+
+      /* Já logado? vai direto para a conta (ou de volta ao carrinho) */
+      if (DB.user) { location.replace(destino()); return; }
       if (!DB.enabled) $("#notConfigured").classList.add("show");
 
       const msg = (id, text, ok = true) => {
@@ -109,7 +121,7 @@
         busy(e.target, true);
         try {
           await DB.signIn($("#lEmail").value.trim(), $("#lPass").value);
-          location.href = "conta.html";
+          location.href = destino();
         } catch (err) { msg("#loginMsg", authErrorPt(err), false); }
         busy(e.target, false);
       };
@@ -125,7 +137,7 @@
             telefone: $("#rTel").value.trim(),
             password: $("#rPass").value,
           });
-          if (data.session) { location.href = "conta.html"; return; }
+          if (data.session) { location.href = destino(); return; }
           e.target.reset();
           msg("#registerMsg", `Conta criada! 🎉 Enviamos um link de confirmação para o seu e-mail. Depois de confirmar, é só entrar.`);
         } catch (err) { msg("#registerMsg", authErrorPt(err), false); }

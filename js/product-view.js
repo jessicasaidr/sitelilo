@@ -37,7 +37,7 @@ function renderProductView(el, p, { compact = false } = {}) {
     <div class="main-img" id="mainImg">${slide(0)}</div>
     <div class="p-info">
       ${compact ? "" : `<div class="breadcrumb" style="padding-top:0"><a href="index.html">Início</a> › <a href="produtos.html${cat.id ? `?cat=${cat.id}` : ""}">${esc(cat.name)}</a> › ${esc(p.name)}</div>`}
-      <div class="sold">${p.sold > 0 ? `+${p.sold} vendidos · ` : ""}Idade ${esc(p.ages)}</div>
+      <div class="sold">${p.rating && p.rating.total ? `<a href="#reviews" class="sold-rating">${ratingMini(p, true)}</a> · ` : ""}${p.sold > 0 ? `+${p.sold} vendidos · ` : ""}Idade ${esc(p.ages)}</div>
       <h1>${esc(p.name)}</h1>
       <div id="pvPrice">${priceHTML(variants[0])}</div>
 
@@ -75,11 +75,13 @@ function renderProductView(el, p, { compact = false } = {}) {
         <div class="guarantee"><span class="ic p-green">${icon("shield", 20)}</span><div><strong>Compra protegida</strong><small>Seus dados cuidados durante toda a compra.</small></div></div>      </div>
       <div class="shipping">
         <div class="opt-label" style="margin-top:0">Meios de envio</div>
-        <form class="inline-form" id="shipForm">
-          <input inputmode="numeric" maxlength="9" placeholder="Seu CEP" id="cep" aria-label="CEP">
+        <form class="cep-form" id="shipForm">
+          <input class="input" inputmode="numeric" maxlength="9" placeholder="Seu CEP" id="cep" aria-label="CEP" value="${esc(Frete.fmtCep(Frete.cep()))}">
           <button class="btn btn-outline" type="submit">Calcular</button>
         </form>
-        <div class="ship-result" id="shipResult"></div>
+        <a class="cep-help" href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" rel="noopener">Não sei meu CEP</a>
+        <div id="shipResult"></div>
+        <div class="prod-time">${icon("clock", 16)} Prazo de produção: <strong>${producaoTxt()}</strong></div>
       </div>`}
     </div>`;
 
@@ -111,16 +113,29 @@ function renderProductView(el, p, { compact = false } = {}) {
     const opts = [chosen.label, $("#customName", el)?.value.trim()].filter(Boolean).join(" · ");
     Cart.add(p.id, Math.max(1, parseInt(qty.value) || 1), opts, chosen.label);
   };
-  /* Frete (simulação) */
+  /* Frete (Melhor Envio): 3 opções mais baratas para este produto/opção/quantidade */
   const ship = $("#shipForm", el);
   if (ship) {
-    const cep = $("#cep", el);
-    cep.oninput = () => { let v = cep.value.replace(/\D/g, "").slice(0, 8); cep.value = v.length > 5 ? v.slice(0, 5) + "-" + v.slice(5) : v; };
-    ship.onsubmit = (e) => {
+    const cep = $("#cep", el), out = $("#shipResult", el);
+    cep.oninput = () => { cep.value = Frete.fmtCep(cep.value); };
+    ship.onsubmit = async (e) => {
       e.preventDefault();
-      if (cep.value.replace(/\D/g, "").length !== 8) { $("#shipResult", el).innerHTML = `<span style="color:var(--rose-t)">Digite um CEP válido.</span>`; return; }
+      if (!Frete.valid(cep.value)) { out.innerHTML = `<div class="ship-msg err">Digite um CEP válido.</div>`; return; }
       store.set("lilo_cep", cep.value);
-      $("#shipResult", el).innerHTML = `Enviamos para o CEP <strong>${cep.value}</strong>! O valor do frete é informado pelo WhatsApp ao concluir o pedido.<br><small style="color:var(--ink-soft)">Frete grátis em compras acima de ${brl(STORE.freeShipping)}.</small>`;
+      out.innerHTML = `<div class="ship-msg">Calculando o frete…</div>`;
+      try {
+        const q = Math.max(1, parseInt(qty.value) || 1);
+        const r = await Frete.quote(cep.value, [{ id: p.id, variant: chosen.label, qty: q }]);
+        const freeNow = cardTotal(chosen, 1) * q >= STORE.freeShipping;
+        out.innerHTML = `<div class="ship-opts">${r.options.map((o, k) => `
+          <div class="ship-opt">
+            <span class="so-info"><strong>${esc(Frete.label(o))}</strong><small>${Frete.prazo(o)} após o envio</small></span>
+            <span class="so-price">${freeNow && k === 0 ? `<b class="free">Grátis</b>` : brl(o.price)}</span>
+          </div>`).join("")}</div>
+          <small class="ship-note">Valores e prazos estimados: confirmamos o frete com você pelo WhatsApp antes do envio. Frete grátis acima de ${brl(STORE.freeShipping)}.</small>`;
+      } catch (err) {
+        out.innerHTML = `<div class="ship-msg err">${esc(err.message)}</div>`;
+      }
     };
   }
 }

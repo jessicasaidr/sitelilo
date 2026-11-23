@@ -45,6 +45,8 @@ Pages.conta = async () => {
   const tabDefs = {
     dados:      ["user",   "Meus dados"],
     seguranca:  ["shield", "Segurança"],
+    pedidos:    ["bag",    "Meus pedidos"],
+    vendas:     ["ticket", "Pedidos"],
     produtos:   ["cube",   "Produtos"],
     categorias: ["puzzle", "Categorias"],
     clientes:   ["users",  "Clientes"],
@@ -66,9 +68,10 @@ Pages.conta = async () => {
   }
 
   const openTab = (tab) => {
-    if (!DB.isAdmin && !["dados", "seguranca"].includes(tab)) tab = "dados";
+    if (!DB.isAdmin && !["dados", "seguranca", "pedidos"].includes(tab)) tab = "dados";
     $$(".acc-tab[data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
     $$(".panel").forEach((pn) => pn.classList.toggle("on", pn.id === `panel-${tab}`));
+    if (tab === "pedidos") loadMyOrders();
     if (DB.isAdmin && window.Admin) Admin.open(tab);
   };
   $$(".acc-tab[data-tab]").forEach((b) => b.onclick = () => {
@@ -143,3 +146,44 @@ Pages.conta = async () => {
     showMsg("#passMsg", "Crie sua nova senha abaixo.", true);
   } else openTab(tabDefs[hash] ? hash : "dados");
 };
+
+/* ---------- Meus pedidos (cliente) ---------- */
+const ORDER_STATUS = {
+  pendente:   ["Aguardando confirmação", "yellow"],
+  confirmado: ["Confirmado", "blue"],
+  enviado:    ["Enviado", "purple"],
+  entregue:   ["Entregue", "green"],
+  cancelado:  ["Cancelado", "rose"],
+};
+async function loadMyOrders() {
+  const box = $("#myOrders");
+  const { data, error } = await DB.client.from("orders").select("*").eq("user_id", DB.user.id).order("created_at", { ascending: false });
+  if (error) { box.innerHTML = `<div class="loading">Os pedidos ainda não estão ativos (falta rodar o SQL 056 no Supabase).</div>`; return; }
+  if (!data.length) {
+    box.innerHTML = `<div class="empty-box">${icon("bag", 28)}<p>Você ainda não fez nenhum pedido.</p><a class="btn btn-primary" href="produtos.html">Ver produtos</a></div>`;
+    return;
+  }
+  /* Produtos que o cliente já avaliou */
+  const { data: mine } = await DB.client.from("reviews").select("product_id").eq("user_id", DB.user.id);
+  const rated = new Set((mine || []).map((r) => String(r.product_id)));
+  box.innerHTML = data.map((o) => {
+    const [label, color] = ORDER_STATUS[o.status] || [o.status, "blue"];
+    const canRate = ["confirmado", "enviado", "entregue"].includes(o.status);
+    return `<div class="order-card">
+      <div class="order-head">
+        <div><strong>Pedido nº ${o.id}</strong><small>${new Date(o.created_at).toLocaleDateString("pt-BR")}</small></div>
+        <span class="status p-${color}">${label}</span>
+      </div>
+      <ul class="order-items">${(o.items || []).map((i) => `
+        <li>
+          <span>${i.qty}× ${esc(i.name)}${i.variant && !/^(1 )?unidade$/i.test(i.variant) ? ` <small>(${esc(i.variant)})</small>` : ""}</span>
+          ${canRate ? (rated.has(String(i.id))
+            ? `<a class="rate-link done" href="produto.html?id=${i.id}#avaliar">★ Avaliado</a>`
+            : `<a class="rate-link" href="produto.html?id=${i.id}#avaliar">★ Avaliar</a>`) : ""}
+        </li>`).join("")}
+      </ul>
+      <div class="order-foot"><span>Total: <strong>${brl(Number(o.total || 0))}</strong></span>${o.pix_total ? `<span class="pix">${brl(Number(o.pix_total))} no Pix</span>` : ""}</div>
+      ${o.status === "pendente" ? `<small class="order-note">Assim que confirmarmos seu pedido pelo WhatsApp, você poderá avaliar os produtos ♡</small>` : ""}
+    </div>`;
+  }).join("");
+}

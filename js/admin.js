@@ -63,6 +63,7 @@ const Admin = {
   subscribers: [],
 
   open(tab) {
+    if (tab === "vendas") this.initOrders();
     if (tab === "produtos") this.initProducts();
     if (tab === "categorias") this.initCategories();
     if (tab === "clientes") this.initClients();
@@ -72,6 +73,54 @@ const Admin = {
     if (!this._unreadChecked) { this._unreadChecked = true; this.refreshUnread(); }
   },
 
+  /* =====================================================
+     PEDIDOS (registrados no "Iniciar compra")
+     ===================================================== */
+  async initOrders(force = false) {
+    if (this.loaded.vendas && !force) return;
+    this.loaded.vendas = true;
+    const [{ data: orders, error }, { data: profs }] = await Promise.all([
+      DB.client.from("orders").select("*").order("created_at", { ascending: false }),
+      DB.client.from("profiles").select("id,nome,email,telefone"),
+    ]);
+    if (error) { $("#ordList").innerHTML = `<div class="loading">Rode o SQL 056 no Supabase para ativar os pedidos.</div>`; return; }
+    this.orders = orders;
+    this.ordProfiles = new Map((profs || []).map((p) => [p.id, p]));
+    $("#ordSearch").oninput = () => this.renderOrders();
+    $("#ordFilter").onchange = () => this.renderOrders();
+    this.renderOrders();
+  },
+  renderOrders() {
+    const ST = { pendente: "Pendente", confirmado: "Confirmado", enviado: "Enviado", entregue: "Entregue", cancelado: "Cancelado" };
+    const q = $("#ordSearch").value.trim().toLowerCase(), f = $("#ordFilter").value;
+    const list = this.orders.filter((o) => {
+      const c = this.ordProfiles.get(o.user_id) || {};
+      const hay = [o.id, c.nome, c.email, ...(o.items || []).map((i) => i.name)].join(" ").toLowerCase();
+      return (!f || o.status === f) && (!q || hay.includes(q));
+    });
+    $("#ordList").innerHTML = list.length ? list.map((o) => {
+      const c = this.ordProfiles.get(o.user_id) || {};
+      const tel = String(c.telefone || "").replace(/\D/g, "");
+      const wa = tel ? `https://wa.me/${tel.length <= 11 ? "55" + tel : tel}?text=${encodeURIComponent(`Olá, ${(c.nome || "").split(" ")[0]}! Sobre o seu pedido nº ${o.id} no ${STORE.name}:`)}` : "";
+      return `<div class="order-card">
+        <div class="order-head">
+          <div><strong>Pedido nº ${o.id}</strong><small>${new Date(o.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })} · ${esc(c.nome || c.email || "Cliente")}${wa ? ` · <a href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}</small></div>
+          <select class="status-select st-${o.status}" data-ord="${o.id}">${Object.entries(ST).map(([v, l]) => `<option value="${v}" ${o.status === v ? "selected" : ""}>${l}</option>`).join("")}</select>
+        </div>
+        <ul class="order-items">${(o.items || []).map((i) => `<li><span>${i.qty}× ${esc(i.name)}${i.opts ? ` <small>(${esc(i.opts)})</small>` : ""}</span><span>${brl(Number(i.price || 0) * i.qty)}</span></li>`).join("")}</ul>
+        <div class="order-foot"><span>Total: <strong>${brl(Number(o.total || 0))}</strong></span>${o.pix_total ? `<span class="pix">${brl(Number(o.pix_total))} no Pix</span>` : ""}</div>
+      </div>`;
+    }).join("") : `<div class="loading">Nenhum pedido encontrado.</div>`;
+    $$("[data-ord]").forEach((sel) => sel.onchange = async () => {
+      const { error } = await DB.client.from("orders").update({ status: sel.value }).eq("id", sel.dataset.ord);
+      if (error) { alert("Não foi possível alterar: " + error.message); return; }
+      const o = this.orders.find((x) => String(x.id) === sel.dataset.ord); if (o) o.status = sel.value;
+      sel.className = `status-select st-${sel.value}`;
+      toast(sel.value === "confirmado" ? "Pedido confirmado! O cliente já pode avaliar ♡" : "Status atualizado!");
+      this.refreshUnread();
+    });
+  },
+
   /* Mostra "Mensagens (3)" no menu quando há mensagens não lidas */
   async refreshUnread() {
     const { count, error } = await DB.client.from("contact_messages").select("id", { count: "exact", head: true }).eq("lida", false);
@@ -79,6 +128,13 @@ const Admin = {
     if (!tab) return;
     tab.querySelector(".count")?.remove();
     if (!error && count) tab.insertAdjacentHTML("beforeend", ` <span class="count">${count}</span>`);
+    /* Pedidos pendentes */
+    const pend = await DB.client.from("orders").select("id", { count: "exact", head: true }).eq("status", "pendente");
+    const ot = $('.acc-tab[data-tab="vendas"]');
+    if (ot) {
+      const old = ot.querySelector(".count"); if (old) old.outerHTML = "";
+      if (!pend.error && pend.count) ot.insertAdjacentHTML("beforeend", ` <span class="count">${pend.count}</span>`);
+    }
   },
 
   async fetchCats() {
@@ -93,6 +149,11 @@ const Admin = {
     this.prods = data;
     return data;
   },
+  async fetchBoxes() {
+    const { data } = await DB.client.from("shipping_boxes").select("id,name,sort_order").order("sort_order");
+    this.boxes = data || [];   // sem o SQL 055 a lista fica vazia (campo de embalagem some)
+    return this.boxes;
+  },
   catName(id) { return this.cats.find((c) => c.id === id)?.name || "Sem categoria"; },
 
   /* =====================================================
@@ -102,7 +163,7 @@ const Admin = {
     if (this.loaded.produtos && !force) return;
     this.loaded.produtos = true;
     try {
-      await Promise.all([this.fetchCats(), this.fetchProds()]);
+      await Promise.all([this.fetchCats(), this.fetchProds(), this.fetchBoxes()]);
     } catch (err) {
       $("#prodRows").innerHTML = `<tr><td colspan="6" class="loading">Erro ao carregar: ${esc(err.message)}</td></tr>`;
       return;
@@ -190,7 +251,7 @@ const Admin = {
        antigas usando o preço do produto — é só ajustar o valor de cada uma. */
     const fmt = (v) => (v === "" || v == null ? "" : Number(v).toFixed(2));
     let variants = Array.isArray(r.variants) && r.variants.length
-      ? r.variants.map((v) => ({ label: v.label, price: fmt(v.price), pix: fmt(v.pix), old: fmt(v.old_price) }))
+      ? r.variants.map((v) => ({ label: v.label, price: fmt(v.price), pix: fmt(v.pix), old: fmt(v.old_price), box: v.box || "" }))
       : (r.options && r.options.length ? r.options : ["1 unidade"]).map((label) => ({ label, price: fmt(r.price), pix: "", old: fmt(r.old_price) }));
 
     const body = `
@@ -204,7 +265,7 @@ const Admin = {
 
       <div class="field"><label>Opções e preços *</label>
         <div class="variants">
-          <div class="v-head"><span>Opção</span><span>Preço normal / cartão (R$)</span><span>Preço no Pix (R$)</span><span>Preço antigo (R$)</span><span></span></div>
+          <div class="v-head"><span>Opção</span><span>Preço normal / cartão (R$)</span><span>Preço no Pix (R$)</span><span>Preço antigo (R$)</span><span>Embalagem</span><span></span></div>
           <div id="mVariants"></div>
         </div>
         <button type="button" class="btn btn-outline" id="mAddVariant" style="padding:8px 14px;margin-top:8px">+ Adicionar opção</button>
@@ -230,6 +291,9 @@ const Admin = {
           <label class="check"><input type="checkbox" id="mCustom" ${r.personalizable ? "checked" : ""}> Personalizável (campo de nome e imagem)</label>
           <label class="check"><input type="checkbox" id="mActive" ${r.active ? "checked" : ""}> Visível na loja</label></div>
         <div class="field"><label for="mSold">Quantidade vendida (exibida)</label><input id="mSold" type="number" min="0" value="${r.sold ?? 0}"></div>
+        ${(this.boxes || []).length ? `<div class="field"><label for="mBox">Embalagem (para o frete)</label>
+          <select id="mBox">${this.boxes.map((b) => `<option value="${esc(b.id)}" ${(r.box_id || "P") === b.id ? "selected" : ""}>${esc(b.name)}</option>`).join("")}</select>
+          <small>Medidas e peso de cada embalagem: Configurações > Envio.</small></div>` : ""}
         <div class="field"><label for="mSort">Ordem de exibição</label><input id="mSort" type="number" value="${r.sort_order ?? 0}"><small>Menor número aparece primeiro.</small></div>
       </div>`;
 
@@ -241,6 +305,7 @@ const Admin = {
           price: $(".v-price", row).value,
           pix: $(".v-pix", row).value,
           old: $(".v-old", row).value,
+          box: $(".v-box", row) ? $(".v-box", row).value : (variants[k] && variants[k].box) || "",
         };
       });
     };
@@ -251,6 +316,10 @@ const Admin = {
           <input class="input v-price" type="number" step="0.01" min="0" placeholder="0,00" value="${esc(v.price)}" aria-label="Preço da opção ${k + 1}">
           <input class="input v-pix" type="number" step="0.01" min="0" placeholder="automático" value="${esc(v.pix)}" aria-label="Preço no Pix da opção ${k + 1}">
           <input class="input v-old" type="number" step="0.01" min="0" placeholder="opcional" value="${esc(v.old)}" aria-label="Preço antigo da opção ${k + 1}">
+          <select class="input v-box" aria-label="Embalagem da opção ${k + 1}">
+            <option value="">Do produto</option>
+            ${(this.boxes || []).map((b) => `<option value="${esc(b.id)}" ${v.box === b.id ? "selected" : ""}>${esc(b.name)}</option>`).join("")}
+          </select>
           <div class="v-acts">
             ${k > 0 ? `<button type="button" class="icon-btn" data-vup="${k}" title="Subir">↑</button>` : `<span class="v-first" title="Já vem selecionada na loja">★</span>`}
             <button type="button" class="icon-btn danger" data-vdel="${k}" title="Remover opção" ${variants.length === 1 ? "disabled" : ""}>${icon("trash", 16)}</button>
@@ -313,7 +382,7 @@ const Admin = {
           if (price == null || isNaN(price) || price < 0) { alert(`Informe o preço da opção "${label}".`); return false; }
           if (clean.some((c) => c.label.toLowerCase() === label.toLowerCase())) { alert(`A opção "${label}" está repetida.`); return false; }
           if (pix != null && !isNaN(pix) && pix > price) { alert(`Em "${label}" o preço no Pix está maior que o preço normal.`); return false; }
-          clean.push({ label, price, pix: pix != null && !isNaN(pix) ? pix : null, old_price: old != null && !isNaN(old) ? old : null });
+          clean.push({ label, price, pix: pix != null && !isNaN(pix) ? pix : null, old_price: old != null && !isNaN(old) ? old : null, ...(v.box ? { box: v.box } : {}) });
         }
         if (!clean.length) { alert("Cadastre pelo menos uma opção com preço."); return false; }
         const noDiscount = clean.filter((v) => v.old_price != null && v.old_price <= v.price).map((v) => v.label);
@@ -338,6 +407,7 @@ const Admin = {
           sold: parseInt($("#mSold").value) || 0,
           sort_order: parseInt($("#mSort").value) || 0,
         };
+        if ($("#mBox")) row.box_id = $("#mBox").value;
         const q = isNew ? DB.client.from("products").insert(row) : DB.client.from("products").update(row).eq("id", r.id);
         const { error } = await q;
         if (error) throw error;
@@ -358,7 +428,7 @@ const Admin = {
     drawVariants();
     $("#mAddVariant").onclick = () => {
       readVariants();
-      variants.push({ label: "", price: "", pix: "", old: "" });
+      variants.push({ label: "", price: "", pix: "", old: "", box: "" });
       drawVariants();
       $$("#mVariants .v-label").pop()?.focus();
     };
@@ -648,6 +718,25 @@ const Admin = {
     Object.entries(map).forEach(([id, k]) => $("#" + id).value = s[k] ?? "");
     $("#sPix").value = Math.round(Number(s.pix_discount || 0) * 1000) / 10;
 
+    /* Envio: CEP de origem, prazo de produção e embalagens */
+    const fmtCep = (v) => { v = String(v || "").replace(/\D/g, "").slice(0, 8); return v.length > 5 ? v.slice(0, 5) + "-" + v.slice(5) : v; };
+    $("#sOrigin").value = fmtCep(s.origin_cep || "");
+    $("#sOrigin").oninput = (e) => { e.target.value = fmtCep(e.target.value); };
+    $("#sProdMin").value = s.production_days_min ?? 7;
+    $("#sProdMax").value = s.production_days_max ?? 12;
+    const { data: boxes, error: boxErr } = await DB.client.from("shipping_boxes").select("*").order("sort_order");
+    $("#sBoxes").innerHTML = boxErr
+      ? `<div class="loading">Rode o SQL 055 no Supabase para ativar as embalagens.</div>`
+      : `<div class="box-row box-head"><span>Embalagem</span><span>Altura</span><span>Largura</span><span>Compr.</span><span>Peso (kg)</span></div>` +
+        boxes.map((b) => `
+        <div class="box-row" data-box="${esc(b.id)}">
+          <input class="input bx-name" value="${esc(b.name)}" aria-label="Nome da embalagem">
+          <input class="input bx-h" type="number" step="0.1" min="0.1" value="${esc(b.height)}" aria-label="Altura (cm)">
+          <input class="input bx-w" type="number" step="0.1" min="0.1" value="${esc(b.width)}" aria-label="Largura (cm)">
+          <input class="input bx-l" type="number" step="0.1" min="0.1" value="${esc(b.length)}" aria-label="Comprimento (cm)">
+          <input class="input bx-kg" type="number" step="0.01" min="0.01" value="${esc(b.weight)}" aria-label="Peso (kg)">
+        </div>`).join("");
+
     /* Cartão: para cada parcela, o "cliente paga" do simulador da InfinitePay numa venda de R$ 1.000,00.
        No banco fica o acréscimo em % (ex.: 1.142,82 → 14,282%). */
     const fees = Array.isArray(s.card_fees)
@@ -680,10 +769,24 @@ const Admin = {
         setBusy(e.target, false);
         return showMsg("#storeMsg", "Preencha o valor de todas as parcelas (entre 1000 e 1500, simulando uma venda de R$ 1.000,00) ou deixe todas vazias.", false);
       } else row.card_fees = feeVals.map((x) => Math.round((x - 1000) / 10 * 10000) / 10000);  // % de acréscimo
+      row.origin_cep = $("#sOrigin").value.replace(/\D/g, "") || null;
+      if (row.origin_cep && row.origin_cep.length !== 8) { setBusy(e.target, false); return showMsg("#storeMsg", "CEP de origem inválido.", false); }
+      row.production_days_min = parseInt($("#sProdMin").value) || 0;
+      row.production_days_max = Math.max(row.production_days_min, parseInt($("#sProdMax").value) || 0);
       row.updated_at = new Date().toISOString();
       const { error: err } = await DB.client.from("store_settings").update(row).eq("id", 1);
+      if (err) { setBusy(e.target, false); return showMsg("#storeMsg", `Não foi possível salvar: ${esc(err.message)}`, false); }
+      /* Embalagens */
+      for (const r of $$("#sBoxes .box-row[data-box]")) {
+        const b = { name: $(".bx-name", r).value.trim() || r.dataset.box, height: toNum($(".bx-h", r).value), width: toNum($(".bx-w", r).value),
+          length: toNum($(".bx-l", r).value), weight: toNum($(".bx-kg", r).value) };
+        if ([b.height, b.width, b.length, b.weight].some((x) => x == null || isNaN(x) || x <= 0)) {
+          setBusy(e.target, false); return showMsg("#storeMsg", `Preencha medidas e peso da embalagem "${esc(b.name)}".`, false);
+        }
+        const { error: be } = await DB.client.from("shipping_boxes").update(b).eq("id", r.dataset.box);
+        if (be) { setBusy(e.target, false); return showMsg("#storeMsg", `Não foi possível salvar a embalagem: ${esc(be.message)}`, false); }
+      }
       setBusy(e.target, false);
-      if (err) return showMsg("#storeMsg", `Não foi possível salvar: ${esc(err.message)}`, false);
       showMsg("#storeMsg", "Configurações salvas! Elas já valem para todo o site.");
     };
   },

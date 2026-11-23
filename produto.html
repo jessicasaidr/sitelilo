@@ -25,6 +25,8 @@
 
     <section class="desc" id="desc"></section>
 
+    <section class="reviews" id="reviews"></section>
+
     <section class="section" style="padding-top:10px">
       <div class="section-head"><h2>Você pode gostar &lt;3</h2></div>
       <div class="carousel" id="related"></div>
@@ -39,6 +41,7 @@
   <script src="js/db.js"></script>
   <script src="js/main.js"></script>
   <script src="js/product-view.js"></script>
+  <script src="js/reviews.js"></script>
   <script>
     Pages.produto = () => {
       const p = productById(qs("id")) || PRODUCTS[0];
@@ -47,6 +50,9 @@
       renderProductView($("#product"), p);
 
       /* Descrição cadastrada no painel admin (cada parágrafo separado por linha em branco) */
+      /* Botão do WhatsApp abaixo da descrição: pede mais informações sobre este produto */
+      const waProduto = `https://wa.me/${STORE.whatsapp}?text=${encodeURIComponent(`Olá! Vi o produto *${p.name}* no site do ${STORE.name} e gostaria de mais informações sobre ele. 😊
+${location.href}`)}`;
       const fillDesc = (v) => { const t = $("#descText"); if (t) t.innerHTML = descHTML(p.description, v.label); };
       if (p.description) {
         $("#desc").innerHTML = `<h3 style="font-size:1.1rem;color:var(--ink)">Descrição</h3><div id="descText"></div>`;
@@ -62,17 +68,20 @@
           <li><strong>Aprender brincando:</strong> materiais manipuláveis lúdicos que prendem a atenção das crianças.</li>
           <li><strong>Material de qualidade:</strong> ${p.digital ? "arquivos em alta resolução, prontos para imprimir." : "peças resistentes, coloridas e com acabamento seguro."}</li>
           <li><strong>Feito por educadores:</strong> conteúdo alinhado à BNCC e testado em sala de aula.</li>
-          <li><strong>Prazo:</strong> ${p.digital ? "envio imediato por e-mail após a confirmação do pagamento." : "produção de 7 a 12 dias úteis + prazo de envio."}</li>
+          <li><strong>Prazo:</strong> ${p.digital ? "envio imediato por e-mail após a confirmação do pagamento." : `produção de ${producaoTxt()}.`}</li>
         </ul>
         <div class="socials" style="margin-top:6px">
           <a href="https://instagram.com/${STORE.instagram}" target="_blank" rel="noopener" aria-label="Instagram" style="color:var(--indigo);background:var(--indigo-1)">${icon("insta", 18)}</a>
-          <a href="https://wa.me/?text=${encodeURIComponent(p.name + " " + location.href)}" target="_blank" rel="noopener" aria-label="Compartilhar no WhatsApp" style="color:var(--indigo);background:var(--indigo-1)">${icon("wa", 18)}</a>
+          <a href="${waProduto}" target="_blank" rel="noopener" aria-label="Pedir mais informações pelo WhatsApp" title="Pedir mais informações pelo WhatsApp" style="color:var(--indigo);background:var(--indigo-1)">${icon("wa", 18)}</a>
         </div>`;
 
       if (p.description) $("#desc").insertAdjacentHTML("beforeend", `
         <div class="socials" style="margin-top:6px">
-          <a href="https://wa.me/?text=${encodeURIComponent(p.name + " " + location.href)}" target="_blank" rel="noopener" aria-label="Compartilhar no WhatsApp" style="color:var(--indigo);background:var(--indigo-1)">${icon("wa", 18)}</a>
+          <a href="${waProduto}" target="_blank" rel="noopener" aria-label="Pedir mais informações pelo WhatsApp" title="Pedir mais informações pelo WhatsApp" style="color:var(--indigo);background:var(--indigo-1)">${icon("wa", 18)}</a>
         </div>`);
+
+      /* Avaliações (estrelas + comentários) */
+      if (window.Reviews) Reviews.render($("#reviews"), p).then(() => { if (location.hash === "#avaliar" || location.hash === "#reviews") $("#reviews").scrollIntoView({ behavior: "smooth" }); });
 
       const related = PRODUCTS.filter((x) => x.id !== p.id).sort((a, b) => (b.cat === p.cat) - (a.cat === p.cat) || b.sold - a.sold).slice(0, 8);
       carousel($("#related"), related);
