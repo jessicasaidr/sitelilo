@@ -146,7 +146,7 @@ const DB = {
   async signUp({ nome, email, telefone, password }) {
     const { data, error } = await this.client.auth.signUp({
       email, password,
-      options: { data: { nome, telefone }, emailRedirectTo: new URL("conta.html", location.href).href },
+      options: { data: { nome, telefone }, emailRedirectTo: new URL("conta", location.href).href },
     });
     if (error) throw error;
     return data; // data.session é null quando a confirmação de e-mail está ativa
@@ -154,7 +154,7 @@ const DB = {
 
   async resetPassword(email) {
     const { error } = await this.client.auth.resetPasswordForEmail(email, {
-      redirectTo: new URL("conta.html?nova-senha=1", location.href).href,
+      redirectTo: new URL("conta?nova-senha=1", location.href).href,
     });
     if (error) throw error;
   },

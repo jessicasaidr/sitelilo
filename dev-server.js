@@ -24,6 +24,8 @@ http
   .createServer((req, res) => {
     let urlPath = decodeURIComponent(req.url.split("?")[0]);
     if (urlPath.endsWith("/")) urlPath += "index.html";
+    /* URLs limpas (igual à Vercel): /produtos → produtos.html */
+    if (!path.extname(urlPath) && fs.existsSync(path.join(ROOT, urlPath + ".html"))) urlPath += ".html";
     const file = path.normalize(path.join(ROOT, urlPath));
     if (!file.startsWith(ROOT)) {
       res.writeHead(403).end("Acesso negado");

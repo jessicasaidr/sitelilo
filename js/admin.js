@@ -208,7 +208,7 @@ const Admin = {
         })()}</td>
         <td class="hide-m"><button type="button" class="pill ${p.active ? "on" : "off"}" data-toggle="${p.id}" title="Clique para ${p.active ? "ocultar" : "mostrar"}">${p.active ? "Visível" : "Oculto"}</button></td>
         <td><div class="t-actions">
-          <a class="icon-btn" href="produto.html?id=${p.id}" target="_blank" title="Ver na loja">${icon("eye", 18)}</a>
+          <a class="icon-btn" href="produto?id=${p.id}" target="_blank" title="Ver na loja">${icon("eye", 18)}</a>
           <button type="button" class="icon-btn" data-edit="${p.id}" title="Editar">${icon("pencil", 18)}</button>
           <button type="button" class="icon-btn danger" data-del="${p.id}" title="Remover">${icon("trash", 18)}</button>
         </div></td>
@@ -459,7 +459,7 @@ const Admin = {
         <td>${this.prods.filter((p) => p.category_id === c.id).length}</td>
         <td class="hide-m"><span class="pill ${c.active ? "on" : "off"}">${c.active ? "Visível" : "Oculta"}</span></td>
         <td><div class="t-actions">
-          <a class="icon-btn" href="produtos.html?cat=${encodeURIComponent(c.id)}" target="_blank" title="Ver na loja">${icon("eye", 18)}</a>
+          <a class="icon-btn" href="produtos?cat=${encodeURIComponent(c.id)}" target="_blank" title="Ver na loja">${icon("eye", 18)}</a>
           <button type="button" class="icon-btn" data-cedit="${esc(c.id)}" title="Editar">${icon("pencil", 18)}</button>
           <button type="button" class="icon-btn danger" data-cdel="${esc(c.id)}" title="Remover">${icon("trash", 18)}</button>
         </div></td>

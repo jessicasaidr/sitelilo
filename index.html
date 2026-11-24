@@ -33,7 +33,7 @@
               <div class="hero-line" style="color:var(--magenta-t)"></div>
               <p>Material dourado, letras e números móveis, carimbos para massinha e peças de contagem impressos em 3D, coloridos e seguros para os pequenos explorarem.</p>
               <div class="hero-feats" id="heroFeats"></div>
-              <a href="produtos.html?cat=materiais-manipulaveis" class="btn btn-primary">Conhecer materiais</a>
+              <a href="produtos?cat=materiais-manipulaveis" class="btn btn-primary">Conhecer materiais</a>
             </div>
             <div class="hero-art">
               <div class="blob p-magenta" style="width:46%;height:62%;left:4%;top:4%;transform:rotate(-6deg)" data-ic="puzzle"></div>
@@ -49,7 +49,7 @@
               <h1>Diversão para jogar <em>em família.</em></h1>
               <div class="hero-line" style="color:var(--rose-t)"></div>
               <p>Tangram, ábaco, caça-palavras deslizante e tabuleiro de cliques impressos em 3D para aprender, rir e brincar juntos.</p>
-              <a href="produtos.html?cat=jogos" class="btn btn-primary" style="margin-top:20px">Ver jogos 3D</a>
+              <a href="produtos?cat=jogos" class="btn btn-primary" style="margin-top:20px">Ver jogos 3D</a>
             </div>
             <div class="hero-art">
               <div class="blob p-rose"   style="width:50%;height:66%;left:6%;top:6%;transform:rotate(-4deg)" data-ic="users"></div>
@@ -64,7 +64,7 @@
               <h1>Com o nome do seu <em>pequeno campeão.</em></h1>
               <div class="hero-line" style="color:var(--orange-t)"></div>
               <p>Plaquinhas e placa de nome em relevo com o nome da criança, para reconhecer, ler e marcar os seus materiais.</p>
-              <a href="produtos.html?cat=personalizados" class="btn btn-primary" style="margin-top:20px">Personalize do seu jeito</a>
+              <a href="produtos?cat=personalizados" class="btn btn-primary" style="margin-top:20px">Personalize do seu jeito</a>
             </div>
             <div class="hero-art">
               <div class="blob p-orange" style="width:44%;height:60%;left:8%;top:10%;transform:rotate(-5deg)" data-ic="heart"></div>
@@ -82,7 +82,7 @@
     <!-- Os queridinhos -->
     <section class="section">
       <div class="container">
-        <div class="section-head"><h2>Os queridinhos ♡</h2><a href="produtos.html">Ver todos</a></div>
+        <div class="section-head"><h2>Os queridinhos ♡</h2><a href="produtos">Ver todos</a></div>
         <div class="carousel" id="carQueridinhos"></div>
       </div>
     </section>
@@ -95,7 +95,7 @@
     <!-- Lançamentos -->
     <section class="section">
       <div class="container">
-        <div class="section-head"><h2>Lançamentos</h2><a href="produtos.html">Ver todos</a></div>
+        <div class="section-head"><h2>Lançamentos</h2><a href="produtos">Ver todos</a></div>
         <div class="carousel" id="carLancamentos"></div>
       </div>
     </section>
@@ -119,7 +119,7 @@
     <!-- Promoções -->
     <section class="section">
       <div class="container">
-        <div class="section-head"><h2>Promoções</h2><a href="produtos.html?promo=1">Ver todas</a></div>
+        <div class="section-head"><h2>Promoções</h2><a href="produtos?promo=1">Ver todas</a></div>
         <div class="carousel" id="carPromo"></div>
       </div>
     </section>
@@ -169,7 +169,7 @@
         picks.forEach((p) => usados.add(p.id));
         art.classList.add("hero-pics");
         art.innerHTML = picks.map((p, i) =>
-          `<a class="hero-pic hp${i + 1}" href="produto.html?id=${p.id}" aria-label="${esc(p.name)}"><img src="${esc(p.images[0])}" alt="${esc(p.name)}"${k ? ' loading="lazy"' : ""}></a>`).join("");
+          `<a class="hero-pic hp${i + 1}" href="produto?id=${p.id}" aria-label="${esc(p.name)}"><img src="${esc(p.images[0])}" alt="${esc(p.name)}"${k ? ' loading="lazy"' : ""}></a>`).join("");
       });
       $("#heroPrev").innerHTML = icon("left"); $("#heroNext").innerHTML = icon("right");
       $("#heroFeats").innerHTML = [["cube","Impressão 3D"],["shield","Material seguro"],["gift","Ideal para presentear"],["cap","Feito por educadores"]]
@@ -195,7 +195,7 @@
 
       /* Mosaico */
       $("#mosaic").innerHTML = CATEGORIES.slice(0, 3).map((c) =>
-        `<a href="produtos.html?cat=${c.id}" class="p-${c.color}">${icon(c.icon, 120)}<h3>${c.name}</h3><span>Ver produtos →</span></a>`).join("");
+        `<a href="produtos?cat=${c.id}" class="p-${c.color}">${icon(c.icon, 120)}<h3>${c.name}</h3><span>Ver produtos →</span></a>`).join("");
 
       /* Produto em destaque ("Onde ideias viram brincadeira") — troque o nome aqui para mudar */
       const destaque = PRODUCTS.find((p) => ["Tabuleiro Alfanumérico de Cliques - Tipo Teclado", "Tabuleiro Alfanumérico de Encaixe", "Geoplano com Elásticos"].includes(p.name)) || PRODUCTS[0];

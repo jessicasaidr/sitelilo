@@ -45,7 +45,7 @@
   <script>
     Pages.produto = () => {
       const p = productById(qs("id")) || PRODUCTS[0];
-      if (!p) { $("#product").innerHTML = `<div class="empty">Produto não encontrado. <a href="produtos.html" style="color:var(--primary)">Ver produtos</a></div>`; return; }
+      if (!p) { $("#product").innerHTML = `<div class="empty">Produto não encontrado. <a href="produtos" style="color:var(--primary)">Ver produtos</a></div>`; return; }
       document.title = `${p.name} - ${STORE.name}`;
       renderProductView($("#product"), p);
 

@@ -22,7 +22,7 @@
   <div id="header"></div>
 
   <main class="container auth">
-    <div class="breadcrumb"><a href="index.html">Início</a> › Minha Conta › <span id="crumb">Login</span></div>
+    <div class="breadcrumb"><a href="/">Início</a> › Minha Conta › <span id="crumb">Login</span></div>
     <h1 class="page-title" id="title">Iniciar sessão</h1>
 
     <p class="buy-notice" id="buyNotice">Entre ou crie sua conta para finalizar. Seu carrinho fica salvo ♡</p>
@@ -74,10 +74,11 @@
       /* Veio do carrinho? Depois de entrar, volta para a página com o carrinho aberto */
       const compra = qs("compra") === "1";
       const destino = () => {
-        if (!compra) return "conta.html";
+        if (!compra) return "conta";
         store.set("lilo_open_cart", true);
-        const back = store.get("lilo_return", "index.html");
-        return /^[\w.-]+\.html(\?[^#]*)?$/.test(back) && !back.startsWith("login") ? back : "index.html";
+        /* volta para a página de onde veio (ex.: "produto?id=3"); só aceita páginas do próprio site */
+        const back = String(store.get("lilo_return", "") || "").replace(/\.html(?=\?|$)/, "");
+        return /^[\w-]+(\?[^#]*)?$/.test(back) && !back.startsWith("login") && back !== "index" ? back : "/";
       };
       if (compra) { $("#buyNotice").classList.add("show"); $("#title").textContent = "Finalizar compra"; }
 

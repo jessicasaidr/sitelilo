@@ -31,7 +31,7 @@ Pages.conta = async () => {
     loading.innerHTML = `A área do cliente ainda não está ativa: falta configurar o Supabase em <strong>js/supabase-config.js</strong>.`;
     return;
   }
-  if (!DB.user) { location.replace("login.html"); return; }
+  if (!DB.user) { location.replace("login"); return; }
   if (!DB.profile) await DB.loadMe();
 
   loading.hidden = true;
@@ -79,7 +79,7 @@ Pages.conta = async () => {
     openTab(b.dataset.tab);
     if (innerWidth < 860) $("#account section").scrollIntoView({ behavior: "smooth" });
   });
-  $("#logout").onclick = async () => { await DB.signOut(); location.href = "index.html"; };
+  $("#logout").onclick = async () => { await DB.signOut(); location.href = "/"; };
 
   /* ---------- Meus dados ---------- */
   const f = {
@@ -160,7 +160,7 @@ async function loadMyOrders() {
   const { data, error } = await DB.client.from("orders").select("*").eq("user_id", DB.user.id).order("created_at", { ascending: false });
   if (error) { box.innerHTML = `<div class="loading">Os pedidos ainda não estão ativos (falta rodar o SQL 056 no Supabase).</div>`; return; }
   if (!data.length) {
-    box.innerHTML = `<div class="empty-box">${icon("bag", 28)}<p>Você ainda não fez nenhum pedido.</p><a class="btn btn-primary" href="produtos.html">Ver produtos</a></div>`;
+    box.innerHTML = `<div class="empty-box">${icon("bag", 28)}<p>Você ainda não fez nenhum pedido.</p><a class="btn btn-primary" href="produtos">Ver produtos</a></div>`;
     return;
   }
   /* Produtos que o cliente já avaliou */
@@ -178,8 +178,8 @@ async function loadMyOrders() {
         <li>
           <span>${i.qty}× ${esc(i.name)}${i.variant && !/^(1 )?unidade$/i.test(i.variant) ? ` <small>(${esc(i.variant)})</small>` : ""}</span>
           ${canRate ? (rated.has(String(i.id))
-            ? `<a class="rate-link done" href="produto.html?id=${i.id}#avaliar">★ Avaliado</a>`
-            : `<a class="rate-link" href="produto.html?id=${i.id}#avaliar">★ Avaliar</a>`) : ""}
+            ? `<a class="rate-link done" href="produto?id=${i.id}#avaliar">★ Avaliado</a>`
+            : `<a class="rate-link" href="produto?id=${i.id}#avaliar">★ Avaliar</a>`) : ""}
         </li>`).join("")}
       </ul>
       <div class="order-foot"><span>Total: <strong>${brl(Number(o.total || 0))}</strong></span>${o.pix_total ? `<span class="pix">${brl(Number(o.pix_total))} no Pix</span>` : ""}</div>

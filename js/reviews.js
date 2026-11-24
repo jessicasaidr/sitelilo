@@ -89,7 +89,7 @@ const Reviews = {
   drawForm(box, p, mine, canReview, editing = false) {
     if (!box) return;
     if (!DB.user) {
-      box.innerHTML = `<div class="rv-note">Comprou este produto? <a href="login.html">Entre na sua conta</a> para avaliar.</div>`;
+      box.innerHTML = `<div class="rv-note">Comprou este produto? <a href="login">Entre na sua conta</a> para avaliar.</div>`;
       return;
     }
     if (mine && !editing) { box.innerHTML = `<div class="rv-note ok">${icon("heart", 14)} Obrigado! Você já avaliou este produto.</div>`; return; }

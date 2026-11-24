@@ -39,7 +39,7 @@ function renderProductView(el, p, { compact = false } = {}) {
     </div>
     <div class="main-img" id="mainImg">${slide(0)}</div>
     <div class="p-info">
-      ${compact ? "" : `<div class="breadcrumb" style="padding-top:0"><a href="index.html">Início</a> › <a href="produtos.html${cat.id ? `?cat=${cat.id}` : ""}">${esc(cat.name)}</a> › ${esc(p.name)}</div>`}
+      ${compact ? "" : `<div class="breadcrumb" style="padding-top:0"><a href="/">Início</a> › <a href="produtos${cat.id ? `?cat=${cat.id}` : ""}">${esc(cat.name)}</a> › ${esc(p.name)}</div>`}
       <div class="sold">${p.rating && p.rating.total ? `<a href="#reviews" class="sold-rating">${ratingMini(p, true)}</a> · ` : ""}${p.sold > 0 ? `+${p.sold} vendidos · ` : ""}Idade ${esc(p.ages)}</div>
       <h1>${esc(p.name)}</h1>
       <div id="pvPrice">${priceHTML(variants[0])}</div>
@@ -73,7 +73,7 @@ function renderProductView(el, p, { compact = false } = {}) {
 
       ${compact ? `
       <p style="color:var(--ink-soft);margin-top:20px">${shortDesc(p)}</p>
-      <a href="produto.html?id=${p.id}" style="text-decoration:underline;font-weight:800;color:var(--primary)">Ver mais</a>` : `
+      <a href="produto?id=${p.id}" style="text-decoration:underline;font-weight:800;color:var(--primary)">Ver mais</a>` : `
       <div class="guarantees">
         <div class="guarantee"><span class="ic p-green">${icon("shield", 20)}</span><div><strong>Compra protegida</strong><small>Seus dados cuidados durante toda a compra.</small></div></div>      </div>
       <div class="shipping">

@@ -175,7 +175,7 @@ function productCard(p) {
   const off = v.old && v.old > v.price ? Math.round((1 - v.price / v.old) * 100) : 0;
   const isNew = !off && p.tags.includes("lancamentos");
   return `
-  <a class="card" href="produto.html?id=${p.id}">
+  <a class="card" href="produto?id=${p.id}">
     <div class="card-img">
       ${off ? `<span class="tag-off">-${off}%</span>` : isNew ? `<span class="tag-off tag-new">Novo</span>` : ""}
       ${placeholder(p)}
@@ -199,19 +199,19 @@ function renderHeader() {
   <div class="topbar">MATERIAIS MANIPULÁVEIS E EDUCATIVOS QUE ENCANTAM ✦ FRETE GRÁTIS ACIMA DE ${brl(STORE.freeShipping)}</div>
   <header class="header">
     <div class="container header-main">
-      <a href="index.html" class="logo" aria-label="${STORE.name} - início"><img src="assets/logo.png" alt="${STORE.name} - ${STORE.slogan}"></a>
-      <form class="search" action="produtos.html" role="search">
+      <a href="/" class="logo" aria-label="${STORE.name} - início"><img src="assets/logo.png" alt="${STORE.name} - ${STORE.slogan}"></a>
+      <form class="search" action="produtos" role="search">
         <label class="sr-only" for="q">Buscar</label>
         <input id="q" name="q" type="search" placeholder="O que você está buscando?" value="${qs("q") || ""}">
         <button type="submit" aria-label="Buscar">${icon("search", 20)}</button>
       </form>
       <div class="header-actions">
         ${window.DB && DB.user ? `
-        <a class="h-action" href="conta.html">
+        <a class="h-action" href="conta">
           <span class="h-icon">${icon("user")}</span>
           <span class="txt"><strong>Olá, ${esc(DB.displayName())}</strong>${DB.isAdmin ? "Painel admin" : "Minha conta"}</span>
         </a>` : `
-        <a class="h-action" href="login.html">
+        <a class="h-action" href="login">
           <span class="h-icon">${icon("user")}</span>
           <span class="txt"><strong>Entrar /</strong>Cadastre-se</span>
         </a>`}
@@ -228,13 +228,13 @@ function renderHeader() {
           <li class="has-dropdown">
             <button class="nav-btn" type="button">Categorias ${icon("down", 16)}</button>
             <div class="dropdown">
-              ${CATEGORIES.map((c) => `<a href="produtos.html?cat=${c.id}"><span class="dot" style="background:var(--${c.color}-t)"></span>${c.name}</a>`).join("")}
+              ${CATEGORIES.map((c) => `<a href="produtos?cat=${c.id}"><span class="dot" style="background:var(--${c.color}-t)"></span>${c.name}</a>`).join("")}
             </div>
           </li>
-          ${navLink("index.html", "Início", "home")}
-          ${navLink("produtos.html", "Produtos", "produtos")}
-          ${navLink("contato.html", "Contato", "contato")}
-          ${navLink("trocas.html", "Trocas e Devoluções", "trocas")}
+          ${navLink("/", "Início", "home")}
+          ${navLink("produtos", "Produtos", "produtos")}
+          ${navLink("contato", "Contato", "contato")}
+          ${navLink("trocas", "Trocas e Devoluções", "trocas")}
         </ul>
       </div>
     </nav>
@@ -249,7 +249,7 @@ function renderFooter() {
   <footer class="footer">
     <div class="container footer-grid">
       <div>
-        <a href="index.html" class="footer-logo"><img src="assets/logo.png" alt="${STORE.name}"></a>
+        <a href="/" class="footer-logo"><img src="assets/logo.png" alt="${STORE.name}"></a>
         <div class="contact-lines">
           <span>WhatsApp: ${STORE.whatsappLabel}</span>
           <span>Telefone: ${STORE.phone}</span>
@@ -263,11 +263,11 @@ function renderFooter() {
       <div>
         <h4>Navegação</h4>
         <ul>
-          <li><a href="index.html">Início</a></li>
-          <li><a href="produtos.html">Produtos</a></li>
-          <li><a href="contato.html">Contato</a></li>
-          <li><a href="trocas.html">Trocas e Devoluções</a></li>
-          <li><a href="${window.DB && DB.user ? "conta.html" : "login.html"}">Minha conta</a></li>
+          <li><a href="/">Início</a></li>
+          <li><a href="produtos">Produtos</a></li>
+          <li><a href="contato">Contato</a></li>
+          <li><a href="trocas">Trocas e Devoluções</a></li>
+          <li><a href="${window.DB && DB.user ? "conta" : "login"}">Minha conta</a></li>
         </ul>
       </div>
       <div>
@@ -413,7 +413,7 @@ const Cart = {
     /* Só finaliza com cadastro: sem login, vai para Entrar/Cadastrar e depois volta com o carrinho aberto */
     if (!(window.DB && DB.user)) {
       store.set("lilo_return", location.pathname.split("/").pop() + location.search);
-      location.href = "login.html?compra=1";
+      location.href = "login?compra=1";
       return;
     }
     const s = this.ship(), o = this.shipChosen(), ship = this.shipPrice();
@@ -478,7 +478,7 @@ const Cart = {
         <div class="cart-empty">
           <span class="h-icon" style="width:64px;height:64px;border-radius:20px">${icon("bag", 30)}</span>
           <p>O carrinho de compras está vazio.</p>
-          <a href="produtos.html" class="btn btn-primary">Ver produtos</a>
+          <a href="produtos" class="btn btn-primary">Ver produtos</a>
         </div>`;
       foot.innerHTML = "";
       return;
@@ -487,7 +487,7 @@ const Cart = {
     body.innerHTML = items.map((i, idx) => {
       const p = productById(i.id); if (!p) return "";
       return `<div class="cart-item">
-        <a class="thumb" href="produto.html?id=${p.id}">${placeholder(p)}</a>
+        <a class="thumb" href="produto?id=${p.id}">${placeholder(p)}</a>
         <div class="ci-info">
           <div class="ci-top">
             <h4>${esc(p.name)}${i.opts ? `<small>${esc(i.opts)}</small>` : ""}<small class="ci-prod">${icon("clock", 12)} Produção: ${producaoTxt()}</small></h4>
@@ -520,8 +520,8 @@ const Cart = {
       <button class="btn btn-primary btn-block btn-lg" type="button" id="checkout">Iniciar compra</button>
       <small class="checkout-note">${logged
         ? `${icon("wa", 14)} Você será direcionado ao WhatsApp para concluir o pedido.`
-        : `${icon("user", 14)} Para concluir a compra é preciso <a href="login.html?compra=1" id="loginToBuy">entrar ou criar sua conta</a>.`}</small>
-      <a href="produtos.html" class="see-more" id="keepShopping">Ver mais produtos</a>`;
+        : `${icon("user", 14)} Para concluir a compra é preciso <a href="login?compra=1" id="loginToBuy">entrar ou criar sua conta</a>.`}</small>
+      <a href="produtos" class="see-more" id="keepShopping">Ver mais produtos</a>`;
 
     /* Eventos */
     $$("[data-rm]", body).forEach((b) => b.onclick = () => this.remove(Number(b.dataset.rm)));
