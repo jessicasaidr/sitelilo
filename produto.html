@@ -71,12 +71,13 @@ ${location.href}`)}`;
           <li><strong>Prazo:</strong> ${p.digital ? "envio imediato por e-mail após a confirmação do pagamento." : `produção de ${producaoTxt()}.`}</li>
         </ul>
         <div class="socials" style="margin-top:6px">
-          <a href="https://instagram.com/${STORE.instagram}" target="_blank" rel="noopener" aria-label="Instagram" style="color:var(--indigo);background:var(--indigo-1)">${icon("insta", 18)}</a>
+          <a href="https://www.instagram.com/liloplaystore/" target="_blank" rel="noopener" aria-label="Instagram da loja" title="Instagram da loja" style="color:var(--indigo);background:var(--indigo-1)">${icon("insta", 18)}</a>
           <a href="${waProduto}" target="_blank" rel="noopener" aria-label="Pedir mais informações pelo WhatsApp" title="Pedir mais informações pelo WhatsApp" style="color:var(--indigo);background:var(--indigo-1)">${icon("wa", 18)}</a>
         </div>`;
 
       if (p.description) $("#desc").insertAdjacentHTML("beforeend", `
         <div class="socials" style="margin-top:6px">
+          <a href="https://www.instagram.com/liloplaystore/" target="_blank" rel="noopener" aria-label="Instagram da loja" title="Instagram da loja" style="color:var(--indigo);background:var(--indigo-1)">${icon("insta", 18)}</a>
           <a href="${waProduto}" target="_blank" rel="noopener" aria-label="Pedir mais informações pelo WhatsApp" title="Pedir mais informações pelo WhatsApp" style="color:var(--indigo);background:var(--indigo-1)">${icon("wa", 18)}</a>
         </div>`);
 

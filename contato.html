@@ -52,9 +52,8 @@
     Pages.contato = () => {
       $("#contactList").innerHTML = [
         ["wa", "green", "WhatsApp", STORE.whatsappLabel, `https://wa.me/${STORE.whatsapp}`],
-        ["tel", "blue", "Telefone", STORE.phone, null],   /* só o WhatsApp é clicável */
+        ["insta", "magenta", "Instagram", "@liloplaystore", "https://www.instagram.com/liloplaystore/"],
         ["mail", "purple", "E-mail", STORE.email, null],
-        ["pin", "orange", "Endereço", STORE.address, null],
       ].map(([i, c, t, v, href]) => `
         <${href ? `a href="${href}" target="_blank" rel="noopener"` : "div"} class="contact-item p-${c}">
           <span class="ic">${icon(i)}</span>

@@ -252,12 +252,10 @@ function renderFooter() {
         <a href="/" class="footer-logo"><img src="assets/logo.png" alt="${STORE.name}"></a>
         <div class="contact-lines">
           <span>WhatsApp: ${STORE.whatsappLabel}</span>
-          <span>Telefone: ${STORE.phone}</span>
           <span>${STORE.email}</span>
-          <span>${STORE.address}</span>
         </div>
         <div class="socials">
-          <a href="https://instagram.com/${STORE.instagram}" target="_blank" rel="noopener" aria-label="Instagram">${icon("insta", 20)}</a>          <a href="${waInfo()}" target="_blank" rel="noopener" aria-label="WhatsApp">${icon("wa", 20)}</a>
+          <a href="https://www.instagram.com/liloplaystore/" target="_blank" rel="noopener" aria-label="Instagram da loja">${icon("insta", 20)}</a>          <a href="${waInfo()}" target="_blank" rel="noopener" aria-label="WhatsApp">${icon("wa", 20)}</a>
         </div>
       </div>
       <div>
